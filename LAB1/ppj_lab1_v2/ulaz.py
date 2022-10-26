@@ -10,7 +10,8 @@ class Regex:
 
 
 class Akcija:
-    def __init__(self, stanje, regex, lex, args):
+    def __init__(self, id, stanje, regex, lex, args):
+        self.id = str(id)         #Marin promijena
         self.stanje = stanje
         self.regex = regex
         self.lex = "" if lex == '-' else lex
@@ -31,7 +32,7 @@ class Akcija:
                 print("Nepoznat argument akcije: " + arg, sys.stderr)
 
     def __str__(self):
-        str = "Stanje: " + self.stanje + "\nRegex: " + self.regex + "\nLex: " + self.lex
+        str = "Id: " + self.id + "\nStanje: " + self.stanje + "\nRegex: " + self.regex + "\nLex: " + self.lex
         if(self.novi_redak != False):
             str += "\nNovi redak"
         if(self.udji_u_stanje != None):
@@ -45,7 +46,7 @@ class Akcija:
         return self.automat.prijelaz(znak)
 
 def ulaz():
-    file_object = open('test/input.txt', 'r')
+    file_object = open('./test/input.txt', 'r')
     lines = file_object.read().split("\n")
     file_object.close()
     
@@ -77,6 +78,7 @@ def ulaz():
     lexevi += lines[i].split()[1:]
 
     i+=1
+    id = 0
     while(i < len(lines)):
         line = lines[i]
         if(line[0] == "<"):
@@ -92,10 +94,13 @@ def ulaz():
                 args += [lines[i]]
                 i+=1
 
-            akcija = Akcija(stanje, regex, lex, args)
+            akcija = Akcija(id, stanje, regex, lex, args)
             akcije += [akcija]
-            
-
+            # print(akcija)
+            # print("---------------------")
+            id += 1 
             i+=1
 
     return stanja[0], stanja, akcije     #pocetno stanje, stanja i akcije
+
+ulaz()
