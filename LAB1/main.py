@@ -1,3 +1,0 @@
-import ulaz
-
-ulaz.ulaz()
