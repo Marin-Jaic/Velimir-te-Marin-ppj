@@ -26,19 +26,20 @@ class Automat:
     def __str__(self):
         return json.dumps(self.prijelazi)
 
-    def epsilon_prijelaz(self, prodena_stanja):
-        nova_stanja = prodena_stanja.copy()
+    def epsilon_prijelaz(self):
+        nova_stanja = set()
 
         for stanje in self.trenutna_stanja:
             if "$" in self.prijelazi[stanje].keys():
                 nova_stanja.update(self.prijelazi[stanje]["$"])
+        
+        self.trenutna_stanja.update(nova_stanja)
 
-        if prodena_stanja == nova_stanja:
-            self.trenutna_stanja.update(prodena_stanja)
-            self.izraz_prihvacen = 1 in self.trenutna_stanja
+        if nova_stanja.issubset(self.trenutna_stanja):
+            self.izraz_prihvacen = 1 in self.trenutna_stanja #TREBA NOVI NAČIN ZA PROVJERU PRIHVATLJIVOSTI VJV
             return 
 
-        self.epsilon_prijelaz(prodena_stanja)
+        self.epsilon_prijelaz()
 
     def prijelaz(self, znak):
         sljedeca_stanja = set()
@@ -51,7 +52,7 @@ class Automat:
 
         if pronaden_prijelaz:
             self.trenutna_stanja = sljedeca_stanja
-            self.epsilon_prijelaz(set())
+            self.epsilon_prijelaz()
 
         return pronaden_prijelaz
     
@@ -166,8 +167,8 @@ def pretvori(izraz, automat):
     
     return lijevo_stanje, desno_stanje
 
-#automat = Automat()
-#pretvori("((ab)|b+c)", automat)
-#for i in automat.prijelazi:
-#    print(i, automat.prijelazi[i])
+# automat = Automat()
+# pretvori("(ab)*(cd)*", automat)
+# for i in automat.prijelazi:
+#     print(i, automat.prijelazi[i])
 
