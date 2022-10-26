@@ -1,3 +1,4 @@
+import json
 import sys
 import pretvorba
 
@@ -31,15 +32,11 @@ class Akcija:
                 print("Nepoznat argument akcije: " + arg, sys.stderr)
 
     def __str__(self):
-        str = "Stanje: " + self.stanje + "\nRegex: " + self.regex + "\nLex: " + self.lex
-        if(self.novi_redak != False):
-            str += "\nNovi redak"
-        if(self.udji_u_stanje != None):
-            str += "\nUdji u stanje: " + self.udji_u_stanje
-        if(self.vrati_se != 0):
-            str += "\nVrati se: " + self.vrati_se
-        str += "\n" + self.automat.__str__()
-        return str
+        string = json.dumps(self.stanje) + ", " + json.dumps(self.regex) + ", " + json.dumps(self.lex) + ", " + ("True" if (self.novi_redak) else "False") + ", "
+        string += ("None" if self.udji_u_stanje == None else json.dumps(self.udji_u_stanje)) + ", " + json.dumps(self.vrati_se) + ", " 
+        string += self.automat.__str__() + ", " + json.dumps(self.pocetno) + ", " + json.dumps(self.prihvatljivo)
+        
+        return string
 
 def ulaz():
     file_object = open('test/input.txt', 'r')
