@@ -32,13 +32,12 @@ class Automat:
         for stanje in self.trenutna_stanja:
             if "$" in self.prijelazi[stanje].keys():
                 nova_stanja.update(self.prijelazi[stanje]["$"])
-        
-        self.trenutna_stanja.update(nova_stanja)
 
         if nova_stanja.issubset(self.trenutna_stanja):
-            self.izraz_prihvacen = 1 in self.trenutna_stanja #TREBA NOVI NAČIN ZA PROVJERU PRIHVATLJIVOSTI VJV
+            self.izraz_prihvacen = 1 in self.trenutna_stanja 
             return 
 
+        self.trenutna_stanja.update(nova_stanja)        #Premjesteno od iznad ifa, jer bi inace uvijek bio subset
         self.epsilon_prijelaz()
 
     def prijelaz(self, znak):
