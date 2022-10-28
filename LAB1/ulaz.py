@@ -11,7 +11,7 @@ class Regex:
 
 
 class Akcija:
-    def __init__(self, stanje, regex, lex, args):
+    def __init__(self, id, stanje, regex, lex, args):
         self.stanje = stanje
         self.regex = regex
         self.lex = "" if lex == '-' else lex
@@ -27,7 +27,7 @@ class Akcija:
             elif(arg[0] == 'U'): #UDJI_U_STANJE
                 self.udji_u_stanje = arg.split(" ")[1]
             elif(arg[0] == 'V'): #VRATI_SE
-                self.vrati_se = int(arg.split(" ")[1])
+                self.vrati_se = arg.split(" ")[1]
             else:
                 print("Nepoznat argument akcije: " + arg, sys.stderr)
 

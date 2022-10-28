@@ -4,30 +4,36 @@ class Automat:
     def __init__(self, prijelazi):
         self.prijelazi = prijelazi
         self.broj_stanja = len(prijelazi.keys()) + 1
+        self.trenutna_stanja = set([0])
 
     def __str__(self):
         return json.dumps(self.prijelazi)
     
     def epsilon_prijelaz(self):
         nova_stanja = set()
+        # print("Epsiloon pocetak:", self.trenutna_stanja)
 
         for stanje in self.trenutna_stanja:
-            if "$" in self.prijelazi[stanje].keys():
-                nova_stanja.update(self.prijelazi[stanje]["$"])
+            if stanje != 1 and "$" in self.prijelazi[stanje].keys(): #Nesto ce trebat bit ucinjeno s mamojebenim typeom ove jedinice
+                nova_stanja.update(self.prijelazi[stanje]["$"])    
 
+        # print("Epsiloon kraj:", self.trenutna_stanja, nova_stanja)
         if nova_stanja.issubset(self.trenutna_stanja):
             self.izraz_prihvacen = 1 in self.trenutna_stanja 
             return 
 
+        
         self.trenutna_stanja.update(nova_stanja)        #Premjesteno od iznad ifa, jer bi inace uvijek bio subset
         self.epsilon_prijelaz()
 
     def prijelaz(self, znak):
         sljedeca_stanja = set()
+        #print(self.trenutna_stanja)
 
         for stanje in self.trenutna_stanja:
-            if znak in self.prijelazi[stanje].keys():
-                sljedeca_stanja.update(self.prijelazi[stanje][znak])
+            if stanje != 1 and znak in self.prijelazi[stanje].keys(): #Nesto ce trebat bit ucinjeno i s ovim mamojebenim typeom ove jedinice
+                sljedeca_stanja.update(self.prijelazi[stanje][znak]) 
+            
                 
         pronaden_prijelaz = len(sljedeca_stanja) != 0
 
@@ -35,11 +41,12 @@ class Automat:
             self.trenutna_stanja = sljedeca_stanja
             self.epsilon_prijelaz()
 
+        # print("Trenutna stanja: ", self.trenutna_stanja)
         return pronaden_prijelaz
     
     def reset(self):
        self.izraz_prihvacen = False
-       self.trenutna_stanja = set()
+       self.trenutna_stanja = set([0])
 
        return  
     
@@ -52,7 +59,7 @@ class Akcija:
         self.lex = lex
         self.novi_redak = novi_redak
         self.udji_u_stanje = udji_u_stanje
-        self.vrati_se = vrati_se
+        self.vrati_se = vrati_se #mijenjat cemo
         self.automat = automat
         self.pocetno, self.prihvatljivo = pocetno, prihvatljivo
 
