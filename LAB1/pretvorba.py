@@ -10,6 +10,9 @@ class Automat:
         return self.broj_stanja - 1
     
     def dodaj_prijelaz(self, lijevo, desno, znak):
+        lijevo = str(lijevo)
+        desno = str(desno)
+        znak = str(znak)
         if lijevo not in self.prijelazi.keys():
             self.prijelazi[lijevo] = dict()
         if(znak not in self.prijelazi[lijevo].keys()):
