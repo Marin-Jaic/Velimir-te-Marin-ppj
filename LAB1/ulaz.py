@@ -11,7 +11,7 @@ class Regex:
 
 
 class Akcija:
-    def __init__(self, id, stanje, regex, lex, args):
+    def __init__(self,stanje, regex, lex, args):
         self.stanje = stanje
         self.regex = regex
         self.lex = "" if lex == '-' else lex
