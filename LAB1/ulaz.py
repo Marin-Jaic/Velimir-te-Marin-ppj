@@ -1,6 +1,8 @@
 import json
 import sys
 import pretvorba
+import itertools
+
 
 class Regex:
     def __init__(self, name, expression):
@@ -11,7 +13,9 @@ class Regex:
 
 
 class Akcija:
+    brojac_id = itertools.count()
     def __init__(self,stanje, regex, lex, args):
+        self.id = next(Akcija.brojac_id)
         self.stanje = stanje
         self.regex = regex
         self.lex = "" if lex == '-' else lex
@@ -32,7 +36,7 @@ class Akcija:
                 print("Nepoznat argument akcije: " + arg, sys.stderr)
 
     def __str__(self):
-        string = json.dumps(self.stanje) + ", " + json.dumps(self.regex) + ", " + json.dumps(self.lex) + ", " + ("True" if (self.novi_redak) else "False") + ", "
+        string = json.dumps(self.id) + ", " + json.dumps(self.stanje) + ", " + json.dumps(self.regex) + ", " + json.dumps(self.lex) + ", " + ("True" if (self.novi_redak) else "False") + ", "
         string += ("None" if self.udji_u_stanje == None else json.dumps(self.udji_u_stanje)) + ", " + json.dumps(self.vrati_se) + ", " 
         string += self.automat.__str__() + ", " + json.dumps(self.pocetno) + ", " + json.dumps(self.prihvatljivo)
         

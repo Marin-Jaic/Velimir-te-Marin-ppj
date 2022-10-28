@@ -102,11 +102,3 @@ def analiza(pocetno_stanje, stanja, akcije):
 
 
 
-pocetno_stanje = "S_pocetno"
-stanja = ["S_pocetno", "S_komentar", "S_unarni"]
-akcije = []
-
-akcije += [Akcija("S_pocetno", "#\\|", "", False, "S_komentar", 0, Automat({2: {"#": [3]}, 0: {"$": [2]}, 4: {"|": [5]}, 3: {"$": [4]}, 5: {"$": [1]}}), 0, 1)]
-
-
-analiza(pocetno_stanje, stanja, akcije)

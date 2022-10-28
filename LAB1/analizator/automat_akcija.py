@@ -53,7 +53,8 @@ class Automat:
 
 
 class Akcija:
-    def __init__(self, stanje, regex, lex, novi_redak, udji_u_stanje, vrati_se, automat, pocetno, prihvatljivo):
+    def __init__(self, id, stanje, regex, lex, novi_redak, udji_u_stanje, vrati_se, automat, pocetno, prihvatljivo):
+        self.id = id
         self.stanje = stanje
         self.regex = regex
         self.lex = lex
