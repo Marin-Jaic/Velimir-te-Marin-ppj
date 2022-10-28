@@ -55,8 +55,14 @@ for redak in retci:
             elif tracker[0].automat.izraz_prihvacen and current_max < tracker[1] or tracker[0].automat.izraz_prihvacen and current_max == tracker[1] and int(finalna_akcija.id) > int(tracker[0].id): 
                 finalna_akcija = tracker[0] #ne postoji, provjeravamo je li niz prihvacen na zadnjem znaku i je li njegova duljina duza od najvece zabiljezene
                 current_max = tracker[1]
-            
-        if not len(updated_akcije_tracker) and finalna_akcija is not None: #Nema vise mogucih prijelaza, nece biti daljnje finalne akcije
+        
+        if not len(updated_akcije_tracker) and current_max != i - pocetni_index:
+            #nema prijelaza i ne postoji definirana finalna akcija -> greske
+            print(redak[pocetni_index], file = sys.stderr)
+            i = pocetni_index + 1
+            novi_izraz = True
+
+        elif not len(updated_akcije_tracker) and finalna_akcija is not None: #Nema vise mogucih prijelaza, nece biti daljnje finalne akcije
             if int(finalna_akcija.vrati_se):
                 i = pocetni_index + int(finalna_akcija.vrati_se)
             
@@ -71,12 +77,6 @@ for redak in retci:
             if finalna_akcija.novi_redak:
                 novi_redak = True
             
-            novi_izraz = True
-
-        elif not len(updated_akcije_tracker) and current_max != i - pocetni_index:
-            #nema prijelaza i ne postoji definirana finalna akcija -> greske
-            print(redak[pocetni_index], file = sys.stderr)
-            i = pocetni_index + 1
             novi_izraz = True
 
         else:   #ima prijelaza u akcijama spremljenima u updated_ackije_tracker, prenosimo ih u akcije_tracker
