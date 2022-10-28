@@ -99,6 +99,3 @@ def analiza(pocetno_stanje, stanja, akcije):
         if novi_redak:
             continue
 
-
-
-

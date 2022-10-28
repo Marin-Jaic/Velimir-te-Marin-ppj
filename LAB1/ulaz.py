@@ -35,10 +35,21 @@ class Akcija:
             else:
                 print("Nepoznat argument akcije: " + arg, sys.stderr)
 
+    def ukloni_navodnike(self, string):
+        new_string = ""
+
+        for i in range(len(string)):
+            if(string[i] == "\"" and (string[i - 1].isnumeric() or string[i + 1].isnumeric())):
+                continue
+            else:
+                new_string += string[i]
+        return new_string
+
+
     def __str__(self):
         string = json.dumps(self.id) + ", " + json.dumps(self.stanje) + ", " + json.dumps(self.regex) + ", " + json.dumps(self.lex) + ", " + ("True" if (self.novi_redak) else "False") + ", "
         string += ("None" if self.udji_u_stanje == None else json.dumps(self.udji_u_stanje)) + ", " + json.dumps(self.vrati_se) + ", " 
-        string += self.automat.__str__() + ", " + json.dumps(self.pocetno) + ", " + json.dumps(self.prihvatljivo)
+        string += self.ukloni_navodnike(self.automat.__str__()) + ", " + json.dumps(self.pocetno) + ", " + json.dumps(self.prihvatljivo)
         
         return string
 
