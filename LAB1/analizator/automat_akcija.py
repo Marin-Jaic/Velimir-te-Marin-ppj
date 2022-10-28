@@ -7,6 +7,42 @@ class Automat:
 
     def __str__(self):
         return json.dumps(self.prijelazi)
+    
+    def epsilon_prijelaz(self):
+        nova_stanja = set()
+
+        for stanje in self.trenutna_stanja:
+            if "$" in self.prijelazi[stanje].keys():
+                nova_stanja.update(self.prijelazi[stanje]["$"])
+
+        if nova_stanja.issubset(self.trenutna_stanja):
+            self.izraz_prihvacen = 1 in self.trenutna_stanja 
+            return 
+
+        self.trenutna_stanja.update(nova_stanja)        #Premjesteno od iznad ifa, jer bi inace uvijek bio subset
+        self.epsilon_prijelaz()
+
+    def prijelaz(self, znak):
+        sljedeca_stanja = set()
+
+        for stanje in self.trenutna_stanja:
+            if znak in self.prijelazi[stanje].keys():
+                sljedeca_stanja.update(self.prijelazi[stanje][znak])
+                
+        pronaden_prijelaz = len(sljedeca_stanja) != 0
+
+        if pronaden_prijelaz:
+            self.trenutna_stanja = sljedeca_stanja
+            self.epsilon_prijelaz()
+
+        return pronaden_prijelaz
+    
+    def reset(self):
+       self.izraz_prihvacen = False
+       self.trenutna_stanja = set()
+
+       return  
+    
 
 
 class Akcija:

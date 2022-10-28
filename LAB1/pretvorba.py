@@ -20,7 +20,7 @@ class Automat:
         self.dodaj_prijelaz(lijevo, desno, '$')
 
     def __str__(self):
-        return json.dumps(self.prijelazi)
+        return "Automat(" + json.dumps(self.prijelazi) + ")"
 
 def je_operator(izraz, i):
     br = 0
