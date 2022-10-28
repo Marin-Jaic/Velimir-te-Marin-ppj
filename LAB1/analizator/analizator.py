@@ -38,7 +38,7 @@ def analiza(pocetno_stanje, stanja, akcije):
                     if akcija.stanje == trenutno_stanje:
                         akcija.automat.reset()
                         akcija.automat.epsilon_prijelaz()
-                        akcije_tracker += [akcija, 0]
+                        akcije_tracker += [[akcija, 0]]
 
                 novi_izraz = False
 
