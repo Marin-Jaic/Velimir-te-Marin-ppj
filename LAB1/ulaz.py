@@ -54,11 +54,11 @@ class Akcija:
         return string
 
 def ulaz():
-    file_object = open('test/input.txt', 'r')
-    lines = file_object.read().split("\n")
-    file_object.close()
+    #file_object = open('test/input.txt', 'r')
+    #lines = file_object.read().split("\n")
+    #file_object.close()
     
-    #lines = sys.stdin.read().split("\n")
+    lines = sys.stdin.read().split("\n")
     #print(lines)
 
     regexi = []
