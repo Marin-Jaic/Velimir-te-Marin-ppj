@@ -1,8 +1,8 @@
 import ulaz
 import json
 
-#lekser = open('analizator/analizator.py', 'a')
-lekser = open('analizator/analizator_v2.py', 'a')
+lekser = open('analizator/LA.py', 'a')
+#lekser = open('analizator/analizator_v2.py', 'a')
 
 poc_stanje, stanja, akcije = ulaz.ulaz()
 
