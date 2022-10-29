@@ -88,6 +88,8 @@ def ulaz():
     i+=1
     while(i < len(lines)):
         line = lines[i]
+        if(line == "" or line == "\n"):
+            break
         if(line[0] == "<"):
             stanje = line[1:line.find('>')]
             regex = line[line.find('>') + 1:]
