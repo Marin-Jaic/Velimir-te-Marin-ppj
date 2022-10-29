@@ -75,6 +75,8 @@ def pretvori(izraz, automat):
                     prijelazni_znak = '\n'
                 elif(izraz[i] == '_'):
                     prijelazni_znak = ' '
+                elif(izraz[i] == "$"):          #Marin dodatak
+                    prijelazni_znak = "\$"
                 a, b = automat.novo_stanje(),  automat.novo_stanje()
                 automat.dodaj_prijelaz(a, b, prijelazni_znak)
             else:
