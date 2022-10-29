@@ -21,7 +21,7 @@ class Akcija:
         self.lex = "" if lex == '-' else lex
         self.novi_redak = False
         self.udji_u_stanje = None
-        self.vrati_se = 0
+        self.vrati_se = -1    #Marin se zajebaje s ovim
         self.automat = pretvorba.Automat()
         self.pocetno, self.prihvatljivo = pretvorba.pretvori(self.regex, self.automat)
 
