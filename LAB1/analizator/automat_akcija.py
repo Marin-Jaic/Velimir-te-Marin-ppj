@@ -13,8 +13,8 @@ class Automat:
         nova_stanja = set()
 
         for stanje in self.trenutna_stanja:
-            if stanje != "1" and "$" in self.prijelazi[stanje].keys(): #Nesto ce trebat bit ucinjeno s mamojebenim typeom ove jedinice
-                nova_stanja.update(self.prijelazi[stanje]["$"])    
+            if stanje != "1" and "ε" in self.prijelazi[stanje].keys(): #Nesto ce trebat bit ucinjeno s mamojebenim typeom ove jedinice
+                nova_stanja.update(self.prijelazi[stanje]["ε"])    
         
         if nova_stanja.issubset(self.trenutna_stanja):
             self.izraz_prihvacen = "1" in self.trenutna_stanja 
