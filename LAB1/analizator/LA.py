@@ -1,4 +1,3 @@
-from turtle import update
 from automat_akcija import *
 import sys
 
@@ -6,7 +5,7 @@ import sys
     #POPRAVLJENO, ALI PAZI NA JOS SPECIJALNIH ZNAKOVA
 
 def analiza(pocetno_stanje, stanja, akcije):
-    #ulaz = sys.stdin.read()
+    
 
     trenutno_stanje = pocetno_stanje
     index = 0
@@ -14,9 +13,11 @@ def analiza(pocetno_stanje, stanja, akcije):
 
     #counter = 0 #SAMO ZA TEST, MAKNI
 
-    file_object = open('test/input2.txt', 'r')
-    ulaz = file_object.read()
-    file_object.close()
+    #file_object = open('test/input2.txt', 'r')
+    #ulaz = file_object.read()
+    #file_object.close()
+
+    ulaz = sys.stdin.read()
 
     while(index < len(ulaz)):
         najveca_duljina = 0
@@ -64,3 +65,5 @@ def analiza(pocetno_stanje, stanja, akcije):
             index += najveca_duljina
 
     #print("Ukupno jedinki: ", counter)
+
+

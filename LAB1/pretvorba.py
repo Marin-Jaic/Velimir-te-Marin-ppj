@@ -20,7 +20,7 @@ class Automat:
         self.prijelazi[lijevo][znak] += [desno]
     
     def dodaj_epsilon(self, lijevo, desno):
-        self.dodaj_prijelaz(lijevo, desno, '$')
+        self.dodaj_prijelaz(lijevo, desno, 'ε')
 
     def __str__(self):
         return "Automat(" + json.dumps(self.prijelazi) + ")"
@@ -75,8 +75,6 @@ def pretvori(izraz, automat):
                     prijelazni_znak = '\n'
                 elif(izraz[i] == '_'):
                     prijelazni_znak = ' '
-                elif(izraz[i] == "$"):          #Marin dodatak
-                    prijelazni_znak = "\$"
                 a, b = automat.novo_stanje(),  automat.novo_stanje()
                 automat.dodaj_prijelaz(a, b, prijelazni_znak)
             else:

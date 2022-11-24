@@ -54,11 +54,11 @@ class Akcija:
         return string
 
 def ulaz():
-    file_object = open('test/input.txt', 'r')
-    lines = file_object.read().split("\n")
-    file_object.close()
+    #file_object = open('test/input.txt', 'r')
+    #lines = file_object.read().split("\n")
+    #file_object.close()
     
-    #lines = sys.stdin.read().split("\n")
+    lines = sys.stdin.read().split("\n")
     #print(lines)
 
     regexi = []
@@ -88,6 +88,8 @@ def ulaz():
     i+=1
     while(i < len(lines)):
         line = lines[i]
+        if(line == "" or line == "\n"):
+            break
         if(line[0] == "<"):
             stanje = line[1:line.find('>')]
             regex = line[line.find('>') + 1:]
