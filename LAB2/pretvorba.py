@@ -112,7 +112,6 @@ class Enka:
         return output
     
 
-
 #mislim da je uglavnom dobro
 class Stanje:
     def __init__(self, id, stavka, t):
