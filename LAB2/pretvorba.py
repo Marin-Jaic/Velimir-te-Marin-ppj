@@ -107,8 +107,8 @@ class Enka:
         output = dumps(self.prijelazi)
 
         for i in reversed(range(self.broj_stanja)):
-            output = output.replace(str(i), "".join(self.stanja[i].stavka))
-
+            output = output.replace(str(i), "".join(self.stanja[i].stavka) + ", T(" + ",".join(self.stanja[i].t) + ")")
+            #output = output.replace(str(i), "".join(self.stanja[i].stavka))
         return output
     
 
@@ -122,5 +122,5 @@ class Stanje:
 nezavrsni_znakovi, zavrsni_znakovi, syn_znakovi, produkcije = ulaz.ulaz()
 gramatika = ulaz.Gramatika(nezavrsni_znakovi, zavrsni_znakovi, produkcije)
 enka = Enka(nezavrsni_znakovi, zavrsni_znakovi, produkcije, nezavrsni_znakovi[0], gramatika.t_skup)
-# print(gramatika)
-# print(enka)
+print(gramatika)
+print(enka)
