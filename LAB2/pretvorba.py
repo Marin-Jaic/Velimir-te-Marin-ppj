@@ -8,7 +8,7 @@ class Enka:
         self.produkcije = produkcije
         self.t_skup = t_skup
 
-        self.stanja = {0: Stanje(1, ["<S'>"], ["$"]), 1: Stanje(1, [".", pocetno_stanje], ["$"])}
+        self.stanja = {0: Stanje(0, ["<S'>"], ["$"]), 1: Stanje(1, [".", pocetno_stanje], ["$"])}
 
         self.prijelazi = {0: {"$": [1]}}
 
