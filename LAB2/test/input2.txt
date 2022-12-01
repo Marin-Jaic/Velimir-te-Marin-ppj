@@ -1,0 +1,8 @@
+%V <S> <A>
+%T b a ( ) L
+%Syn a
+<S>
+ b <A> a
+<A>
+ ( b <A> )
+ L

@@ -9,13 +9,16 @@ class Enka:
         self.produkcije = produkcije
         self.t_skup = t_skup
 
-        self.stanja = {0: Stanje(0, ["<S'>"], ["$"]), 1: Stanje(1, [".", pocetno_stanje], ["$"])}
+        # Ako se piše samo stavka onda je 0. stavka .S jer je produkcija S' -> S
+        #self.stanja = {0: Stanje(0, ["<S'>"], ["$"]), 1: Stanje(1, [".", pocetno_stanje], ["$"])}
+
+        self.stanja = {0: Stanje(1, [".", pocetno_stanje], ["$"])}
 
         self.prijelazi = {0: {"$": [1]}}
 
-        self.broj_stanja = 2 #pazi ovo, bilo je 2
+        self.broj_stanja = 1 #pazi ovo, bilo je 2
 
-        self.generiraj(self.stanja[1])
+        self.generiraj(self.stanja[0]) # pazi i ovo
     
     def dodaj_prijelaz(self, id, znak, nova_stavka, t_crtano):
         sljedece_stanje_id = None
@@ -166,7 +169,7 @@ class Dka:
 
     def dodaj_bivana_stanja(self, bio, stanje):
         for stanje in stanje:
-            bio[stanje] = 1 
+            bio[stanje] = 1
 
     def grupiraj_eokoline(self, br_stanja, prijelazi):
         nova_stanja = [self.eokolina([0], prijelazi, [])]
@@ -231,6 +234,7 @@ class Dka:
     def enka_u_dka(self, enka):
         nova_stanja = self.grupiraj_eokoline(enka.broj_stanja, enka.prijelazi)
         novi_prijelazi = self.ekstrapoliraj_prijelaze(nova_stanja, enka.prijelazi)
+        print(novi_prijelazi)
         self.stanja, self.prijelazi = self.preimenovanje_grupiranih_stanja(nova_stanja, novi_prijelazi, enka.stanja)
 
     def __str__(self):
@@ -253,7 +257,8 @@ nezavrsni_znakovi, zavrsni_znakovi, syn_znakovi, produkcije = ulaz.ulaz()
 gramatika = ulaz.Gramatika(nezavrsni_znakovi, zavrsni_znakovi, produkcije)
 enka = Enka(nezavrsni_znakovi, zavrsni_znakovi, produkcije, nezavrsni_znakovi[0], gramatika.t_skup)
 dka = Dka(enka)
-print(gramatika.t_skup)
+print()
 print(enka)
+print()
 print(dka)
 
