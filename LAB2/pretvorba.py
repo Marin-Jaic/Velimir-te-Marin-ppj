@@ -148,7 +148,14 @@ class Stanje:
         self.t = t
 
 
-    
+class StavkaSkup:
+    def __init__(self, stavka, skup):
+        self.stavka = stavka
+        self.skup = skup
+
+    def __hash__(self):
+        return hash("".join(self.stavka)) ^ hash(self.skup)
+
 class DKAStanje:
 
     def __init__(self, id, set_starih_stanja, opisi_stanja):
@@ -157,7 +164,8 @@ class DKAStanje:
         self.stavke_skupovi = set()
 
         for stanje in set_starih_stanja:
-            self.stavke_skupovi.add((tuple(opisi_stanja[stanje].stavka), frozenset(opisi_stanja[stanje].t)))
+            ss = tuple()
+            self.stavke_skupovi.add(StavkaSkup(opisi_stanja[stanje].stavka, frozenset(opisi_stanja[stanje].t)))
 
     def __str__(self):
         return "(" + str(self.id) + ") -> " + str(self.stavke_skupovi)
@@ -174,7 +182,7 @@ class Dka:
     def __init__(self, enka):
         self.broj_stanja = 0
         self.prijelazi = dict()
-        self.enka_u_dka(enka)
+        self.stanja, self.prijelazi = self.enka_u_dka(enka)
 
     def eokolina(self, stanje_ul, prijelazi, bio_e):
         stanje = stanje_ul.copy()
@@ -259,7 +267,7 @@ class Dka:
         nova_stanja = self.grupiraj_eokoline(enka.broj_stanja, enka.prijelazi)
         novi_prijelazi = self.ekstrapoliraj_prijelaze(nova_stanja, enka.prijelazi)
         print(novi_prijelazi)
-        self.stanja, self.prijelazi = self.preimenovanje_grupiranih_stanja(nova_stanja, novi_prijelazi, enka.stanja)
+        return self.preimenovanje_grupiranih_stanja(nova_stanja, novi_prijelazi, enka.stanja)
 
     def __str__(self):
         st = "Stanja:\n"
@@ -275,15 +283,85 @@ class Dka:
 #pr = {0: { '$':[1, 3]}, 1: {'$': [2]}, 2: {'$':[3], 'a':[3]}, 3:{'$':[2], 'a':[4]}, 4:{'$':[1]}}
 #print(eokolina([4], pr, []))
 
+class Pomak:
+    def __init__(self, novo_stanje):
+        self.u = novo_stanje
+
+class Redukcija:
+    def __init__(self, produkcija):
+        self.id = produkcija.id
+        self.uzorak = produkcija.ds
+        self.novi = produkcija.ls
+
+class Prihvat:
+    def __init__(self):
+        self.prihvat = True
+
+class LRparser:
+    def __init__(self, dka, gramatika):
+        self.akcija = dict()
+        self.novo_stanje = dict()
+
+        for stanje in dka.stanja:
+            self.akcija[stanje.id] = dict()
+            self.novo_stanje[stanje.id] = dict()
+            self.akcija[stanje.id]['$'] = None
+            for znak in gramatika.zavrsni_znakovi:
+                self.akcija[stanje.id][znak] = None
+            for znak in gramatika.nezavrsni_znakovi:
+                self.akcija[stanje.id][znak] = None
+        print(self.akcija)
+        print(self.novo_stanje)
+        for stanje in dka.stanja:
+            for stavka_skup in stanje.stavke_skupovi:
+                stavka = stavka_skup.stavka
+                skup = stavka_skup.skup
+
+                # Prihvat
+                if(stavka == [gramatika.nezavrsni_znakovi[0], "."]):
+                    self.akcija[stanje.id]['$'] = Prihvat()
+
+                # Redukcija
+                elif(stavka.index(".") == len(stavka) - 1):
+                    if not isinstance(self.akcija[stanje.id][znak], Pomak):
+                        for znak in skup:
+                            min_produkcija = None
+                            min_id = None
+                            stavka_bez_tocke = stavka[:]
+                            stavka_bez_tocke.remove('.')
+                            for key in gramatika.produkcije.keys():
+                                for produkcija in gramatika.produkcije[key]:
+                                    if produkcija.ds == stavka_bez_tocke:
+                                        if min_id == None or produkcija.id < min_id:
+                                            min_id = produkcija.id
+                                            min_produkcija = produkcija
+                        
+                        if not isinstance(self.akcija[stanje.id][znak], Redukcija) or self.akcija[stanje.id][znak].id > min_id:
+                            self.akcija[stanje.id][znak] = Redukcija(min_produkcija) #pronadi_produkciju_te_stavke
+
+                # Pomak
+                elif(stavka[stavka.index(".") + 1] in gramatika.zavrsni_znakovi):
+                    tmp = stavka[stavka.index(".") + 1]
+                    self.akcija[stanje.id][tmp] = Pomak(dka.prijelazi[stanje][tmp].id)
+
+                # Novo stanje
+                elif(stavka[stavka.index(".") + 1] in gramatika.nezavrsni_znakovi):
+                    tmp = stavka[stavka.index(".") + 1]
+                    self.novo_stanje[stanje.id][tmp] = dka.prijelazi[stanje][tmp].id
 
 
 nezavrsni_znakovi, zavrsni_znakovi, syn_znakovi, produkcije = ulaz.ulaz()
 gramatika = ulaz.Gramatika(nezavrsni_znakovi, zavrsni_znakovi, produkcije)
 enka = Enka(nezavrsni_znakovi, zavrsni_znakovi, produkcije, nezavrsni_znakovi[0], gramatika.t_skup)
 dka = Dka(enka)
+gramatika.produkcije['<S\'>'] = [ulaz.produkcija(0, ['<S\'>'], ['S'])]
 print()
 print(enka)
-print(gramatika.t_skup)
-# print()
-# print(dka)
+print(gramatika.produkcije)
+print()
+print(dka)
+
+lr = LRparser(dka, gramatika)
+print()
+print(lr.akcija)
 
