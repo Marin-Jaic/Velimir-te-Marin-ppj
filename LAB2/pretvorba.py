@@ -309,9 +309,8 @@ class LRparser:
             for znak in gramatika.zavrsni_znakovi:
                 self.akcija[stanje.id][znak] = None
             for znak in gramatika.nezavrsni_znakovi:
-                self.akcija[stanje.id][znak] = None
-        print(self.akcija)
-        print(self.novo_stanje)
+                self.novo_stanje[stanje.id][znak] = None
+        
         for stanje in dka.stanja:
             for stavka_skup in stanje.stavke_skupovi:
                 stavka = stavka_skup.stavka
@@ -323,21 +322,21 @@ class LRparser:
 
                 # Redukcija
                 elif(stavka.index(".") == len(stavka) - 1):
-                    if not isinstance(self.akcija[stanje.id][znak], Pomak):
-                        for znak in skup:
-                            min_produkcija = None
-                            min_id = None
-                            stavka_bez_tocke = stavka[:]
-                            stavka_bez_tocke.remove('.')
-                            for key in gramatika.produkcije.keys():
-                                for produkcija in gramatika.produkcije[key]:
-                                    if produkcija.ds == stavka_bez_tocke:
-                                        if min_id == None or produkcija.id < min_id:
-                                            min_id = produkcija.id
-                                            min_produkcija = produkcija
-                        
-                        if not isinstance(self.akcija[stanje.id][znak], Redukcija) or self.akcija[stanje.id][znak].id > min_id:
-                            self.akcija[stanje.id][znak] = Redukcija(min_produkcija) #pronadi_produkciju_te_stavke
+                    for znak in skup:
+                        min_produkcija = None
+                        min_id = None
+                        stavka_bez_tocke = stavka[:]
+                        stavka_bez_tocke.remove('.')
+                        for key in gramatika.produkcije.keys():
+                            for produkcija in gramatika.produkcije[key]:
+                                if produkcija.ds == stavka_bez_tocke:
+                                    if min_id == None or produkcija.id < min_id:
+                                        min_id = produkcija.id
+                                        min_produkcija = produkcija
+                    
+                    for t_znak in skup:
+                        if not isinstance(self.akcija[stanje.id][znak], Pomak) and (not isinstance(self.akcija[stanje.id][t_znak], Redukcija) or self.akcija[stanje.id][t_znak].id > min_id):
+                            self.akcija[stanje.id][t_znak] = Redukcija(min_produkcija) #pronadi_produkciju_te_stavke
 
                 # Pomak
                 elif(stavka[stavka.index(".") + 1] in gramatika.zavrsni_znakovi):
@@ -362,6 +361,6 @@ print()
 print(dka)
 
 lr = LRparser(dka, gramatika)
-print()
+print(gramatika.nezavrsni_znakovi)
 print(lr.akcija)
 
