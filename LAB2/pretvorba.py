@@ -54,24 +54,48 @@ class Enka:
         self.prijelazi[stanje.id] = {}
         #ISPRED TOCKE JE NEZAVRSNI ZNAK
         if trenutni_znak in nezavrsni_znakovi:
-            #PRVO ODRADUJEMO EPSILON PRIJELAZE
+            #namjestimo t_skup
+
             t_crtano = set()
 
-            if index + 2 == len(stanje.stavka):
-                t_crtano.add("$")
-            elif stanje.stavka[index + 2] in zavrsni_znakovi:
-                t_crtano.add(trenutni_znak)
-            else:
-                t_crtano.update(self.t_skup[stanje.stavka[index + 2]][:])
+            # if index + 2 == len(stanje.stavka):
+            #     t_crtano.add("$")
+            # elif stanje.stavka[index + 2] in zavrsni_znakovi:
+            #     t_crtano.add(trenutni_znak)
+            # else:
+            #     t_crtano.update(self.t_skup[stanje.stavka[index + 2]][:])
 
-                for produkcija in self.produkcije[trenutni_znak]:
-                    if "$" in produkcija.ds:
-                        t_crtano.update(stanje.t)
-                        break
+            #     for produkcija in self.produkcije[trenutni_znak]:
+            #         if "$" in produkcija.ds:
+            #             t_crtano.update(stanje.t)
+            #             break
+
+            i = index + 2
+            dodaj_sljedeci = True
+
+            while(i < len(stanje.stavka) and dodaj_sljedeci):
+                dodaj_sljedeci = False
+
+                if stanje.stavka[i] in zavrsni_znakovi:
+                    t_crtano.add(stanje.stavka[i])
+                elif i + 1 != len(stanje.stavka):
+                    t_crtano.update(self.t_skup[stanje.stavka[i]][:])
+
+                    for produkcija in self.produkcije[stanje.stavka[i]]:
+                        if "$" in produkcija.ds:
+                            dodaj_sljedeci = True
+                            break
+
+                i += 1
+            
+            if i == len(stanje.stavka) and dodaj_sljedeci:
+                    t_crtano.update(stanje.t)
+
             
             t_crtano = list(t_crtano)
             t_crtano.sort()
-            
+
+            #PRVO ODRADUJEMO EPSILON PRIJELAZE
             self.prijelazi[stanje.id]["$"] = []
 
             for produkcija in self.produkcije[trenutni_znak]:
@@ -259,6 +283,7 @@ enka = Enka(nezavrsni_znakovi, zavrsni_znakovi, produkcije, nezavrsni_znakovi[0]
 dka = Dka(enka)
 print()
 print(enka)
-print()
-print(dka)
+print(gramatika.t_skup)
+# print()
+# print(dka)
 
