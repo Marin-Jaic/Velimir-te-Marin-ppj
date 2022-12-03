@@ -53,7 +53,7 @@ class Enka:
         trenutni_znak = stanje.stavka[index + 1]
         self.prijelazi[stanje.id] = {}
         #ISPRED TOCKE JE NEZAVRSNI ZNAK
-        if trenutni_znak in nezavrsni_znakovi:
+        if trenutni_znak in self.nezavrsni_znakovi:
             #namjestimo t_skup
 
             t_crtano = set()
@@ -76,7 +76,7 @@ class Enka:
             while(i < len(stanje.stavka) and dodaj_sljedeci):
                 dodaj_sljedeci = False
 
-                if stanje.stavka[i] in zavrsni_znakovi:
+                if stanje.stavka[i] in self.zavrsni_znakovi:
                     t_crtano.add(stanje.stavka[i])
                 elif i + 1 != len(stanje.stavka):
                     t_crtano.update(self.t_skup[stanje.stavka[i]][:])
@@ -266,7 +266,6 @@ class Dka:
     def enka_u_dka(self, enka):
         nova_stanja = self.grupiraj_eokoline(enka.broj_stanja, enka.prijelazi)
         novi_prijelazi = self.ekstrapoliraj_prijelaze(nova_stanja, enka.prijelazi)
-        print(novi_prijelazi)
         return self.preimenovanje_grupiranih_stanja(nova_stanja, novi_prijelazi, enka.stanja)
 
     def __str__(self):
@@ -286,6 +285,9 @@ class Dka:
 class Pomak:
     def __init__(self, novo_stanje):
         self.u = novo_stanje
+    
+    def __repr__(self):
+        return "Pomak(" + str(self.u) + ")"
 
 class Redukcija:
     def __init__(self, produkcija):
@@ -293,9 +295,15 @@ class Redukcija:
         self.uzorak = produkcija.ds
         self.novi = produkcija.ls
 
+    def __repr__(self):
+        return "Redukcija(" + str(self.id) + ", " + str(self.uzorak) + ", \"" + str(self.novi) + "\")"
+
 class Prihvat:
     def __init__(self):
         self.prihvat = True
+    
+    def __repr__(self):
+        return "Prihvat()"
 
 class LRparser:
     def __init__(self, dka, gramatika):
@@ -327,6 +335,8 @@ class LRparser:
                         min_id = None
                         stavka_bez_tocke = stavka[:]
                         stavka_bez_tocke.remove('.')
+                        if(stavka_bez_tocke == []):
+                            stavka_bez_tocke = ['$']
                         for key in gramatika.produkcije.keys():
                             for produkcija in gramatika.produkcije[key]:
                                 if produkcija.ds == stavka_bez_tocke:
@@ -337,7 +347,7 @@ class LRparser:
                     for t_znak in skup:
                         if not isinstance(self.akcija[stanje.id][znak], Pomak) and (not isinstance(self.akcija[stanje.id][t_znak], Redukcija) or self.akcija[stanje.id][t_znak].id > min_id):
                             self.akcija[stanje.id][t_znak] = Redukcija(min_produkcija) #pronadi_produkciju_te_stavke
-
+                        
                 # Pomak
                 elif(stavka[stavka.index(".") + 1] in gramatika.zavrsni_znakovi):
                     tmp = stavka[stavka.index(".") + 1]
@@ -348,19 +358,20 @@ class LRparser:
                     tmp = stavka[stavka.index(".") + 1]
                     self.novo_stanje[stanje.id][tmp] = dka.prijelazi[stanje][tmp].id
 
+    def __repr__(self):
+        return "LRparser(" + str(self.akcija) + ", " + str(self.novo_stanje) + ")"
 
-nezavrsni_znakovi, zavrsni_znakovi, syn_znakovi, produkcije = ulaz.ulaz()
-gramatika = ulaz.Gramatika(nezavrsni_znakovi, zavrsni_znakovi, produkcije)
-enka = Enka(nezavrsni_znakovi, zavrsni_znakovi, produkcije, nezavrsni_znakovi[0], gramatika.t_skup)
-dka = Dka(enka)
-gramatika.produkcije['<S\'>'] = [ulaz.produkcija(0, ['<S\'>'], ['S'])]
-print()
-print(enka)
-print(gramatika.produkcije)
-print()
-print(dka)
+    def __str__(self):
+        return "LRparser(" + str(self.akcija) + ", " + str(self.novo_stanje) + ")"
 
-lr = LRparser(dka, gramatika)
-print(gramatika.nezavrsni_znakovi)
-print(lr.akcija)
+
+def generiraj_lr_parser():
+    nezavrsni_znakovi, zavrsni_znakovi, syn_znakovi, produkcije = ulaz.ulaz()
+    gramatika = ulaz.Gramatika(nezavrsni_znakovi, zavrsni_znakovi, produkcije)
+    enka = Enka(nezavrsni_znakovi, zavrsni_znakovi, produkcije, nezavrsni_znakovi[0], gramatika.t_skup)
+    dka = Dka(enka)
+    gramatika.produkcije['<S\'>'] = [ulaz.produkcija(0, ['<S\'>'], ['S'])]
+
+
+    return LRparser(dka, gramatika)
 
