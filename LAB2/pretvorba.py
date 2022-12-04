@@ -147,6 +147,8 @@ class Stanje:
         self.stavka = stavka
         self.t = t
 
+    def __hash__(self):
+        return hash(self.id) ^ hash("".join(self.stavka)) ^ hash("".join(self.t))
 
 class StavkaSkup:
     def __init__(self, stavka, skup):
@@ -155,6 +157,9 @@ class StavkaSkup:
 
     def __hash__(self):
         return hash("".join(self.stavka)) ^ hash(self.skup)
+    
+    def __repr__(self):
+        return str(self.stavka) + " " + str(self.skup)
 
 class DKAStanje:
 
@@ -167,7 +172,7 @@ class DKAStanje:
             ss = tuple()
             self.stavke_skupovi.add(StavkaSkup(opisi_stanja[stanje].stavka, frozenset(opisi_stanja[stanje].t)))
 
-    def __str__(self):
+    def __repr__(self):
         return "(" + str(self.id) + ") -> " + str(self.stavke_skupovi)
 
     def __eq__(self, other):
@@ -275,10 +280,20 @@ class Dka:
 
         st += "Prijelazi:\n"
         for stanje in self.stanja:
-            st += str(self.prijelazi[stanje]) + "\n"
+            st += self.prijelazi[stanje].__repr__() + "\n"
 
 
         return st
+
+    def ispis(self):
+        print("Stanja:\n")
+        for stanje in self.stanja:
+            print(stanje.__str__() + "\n")
+
+        print("Prijelazi:\n")
+        for stanje in self.stanja:
+            print(str(stanje.id) + " -> " +self.prijelazi[stanje].__repr__() + "\n")
+
 #pr = {0: { '$':[1, 3]}, 1: {'$': [2]}, 2: {'$':[3], 'a':[3]}, 3:{'$':[2], 'a':[4]}, 4:{'$':[1]}}
 #print(eokolina([4], pr, []))
 
@@ -369,9 +384,13 @@ def generiraj_lr_parser():
     nezavrsni_znakovi, zavrsni_znakovi, syn_znakovi, produkcije = ulaz.ulaz()
     gramatika = ulaz.Gramatika(nezavrsni_znakovi, zavrsni_znakovi, produkcije)
     enka = Enka(nezavrsni_znakovi, zavrsni_znakovi, produkcije, nezavrsni_znakovi[0], gramatika.t_skup)
+    print("Tskup", gramatika.t_skup)
+    print(enka)
     dka = Dka(enka)
+    dka.ispis()
     gramatika.produkcije['<S\'>'] = [ulaz.produkcija(0, ['<S\'>'], ['S'])]
 
 
     return LRparser(dka, gramatika)
 
+generiraj_lr_parser()

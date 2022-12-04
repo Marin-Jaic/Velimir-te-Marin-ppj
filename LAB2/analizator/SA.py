@@ -73,12 +73,3 @@ def dohvati_ulazni_niz():
 
 #------------------SVE ISPOD OVE CRTE JE DODANO OD STRANE GSA:--------------------------
 
-
-
-
-
-
-ulazni_niz = dohvati_ulazni_niz()
-lrparser = LRparser({0: {'$': None, 'b': Pomak(1), 'a': None, '(': None, ')': None, 'L': None}, 1: {'$': None, 'b': None, 'a': None, '(': Pomak(2), ')': None, 'L': Pomak(11)}, 2: {'$': None, 'b': Pomak(3), 'a': None, '(': None, ')': None, 'L': None}, 3: {'$': None, 'b': None, 'a': None, '(': Pomak(4), ')': None, 'L': Pomak(6)}, 4: {'$': None, 'b': Pomak(5), 'a': None, '(': None, ')': None, 'L': None}, 5: {'$': None, 'b': None, 'a': None, '(': Pomak(4), ')': None, 'L': Pomak(6)}, 6: {'$': None, 'b': None, 'a': None, '(': None, ')': Redukcija(3, ['L'], "<A>"), 'L': None}, 7: {'$': None, 'b': None, 'a': None, '(': None, ')': Pomak(8), 'L': None}, 8: {'$': None, 'b': None, 'a': None, '(': None, ')': Redukcija(2, ['(', 'b', '<A>', ')'], "<A>"), 'L': None}, 9: {'$': None, 'b': None, 'a': None, '(': None, ')': Pomak(10), 'L': None}, 10: {'$': None, 'b': None, 'a': Redukcija(2, ['(', 'b', '<A>', ')'], "<A>"), '(': None, ')': None, 'L': None}, 11: {'$': None, 'b': None, 'a': Redukcija(3, ['L'], "<A>"), '(': None, ')': None, 'L': None}, 12: {'$': None, 'b': None, 'a': Pomak(13), '(': None, ')': None, 'L': None}, 13: {'$': Redukcija(1, ['b', '<A>', 'a'], "<S>"), 'b': None, 'a': None, '(': None, ')': None, 'L': None}, 14: {'$': Prihvat(), 'b': None, 'a': None, '(': None, ')': None, 'L': None}}, {0: {'<S>': 14, '<A>': None}, 1: {'<S>': None, '<A>': 12}, 2: {'<S>': None, '<A>': None}, 3: {'<S>': None, '<A>': 9}, 4: {'<S>': None, '<A>': None}, 5: {'<S>': None, '<A>': 7}, 6: {'<S>': None, '<A>': None}, 7: {'<S>': None, '<A>': None}, 8: {'<S>': None, '<A>': None}, 9: {'<S>': None, '<A>': None}, 10: {'<S>': None, '<A>': None}, 11: {'<S>': None, '<A>': None}, 12: {'<S>': None, '<A>': None}, 13: {'<S>': None, '<A>': None}, 14: {'<S>': None, '<A>': None}})
-lrparser.parsiraj(ulazni_niz)
-lrparser.ispis_gen_stabla()

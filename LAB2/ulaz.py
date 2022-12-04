@@ -24,7 +24,7 @@ class Gramatika: #kinda beskorisna in the grand scheme of things, pomogla mi je 
         
         return info
 
-                    
+
 
     def __str__(self):
         output = ""
@@ -63,7 +63,7 @@ class produkcija:
 
 
 def ulaz():
-    file_object = open('test/input2.txt', 'r')
+    file_object = open('test/input3.txt', 'r')
     lines = file_object.read().splitlines()
     file_object.close()
 
@@ -80,7 +80,8 @@ def ulaz():
 
     for line in lines:
         if line[0] == "<":
-            trenutni_lijevi = line[0:4]
+            # trenutni_lijevi = line[0:4] # štae ovo marine
+            trenutni_lijevi = line[0:line.index(">") + 1]
             continue
         else:
             trenutni_line = line[0:]
