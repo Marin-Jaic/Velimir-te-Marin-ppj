@@ -73,3 +73,8 @@ def dohvati_ulazni_niz():
 
 #------------------SVE ISPOD OVE CRTE JE DODANO OD STRANE GSA:--------------------------
 
+
+ulazni_niz = dohvati_ulazni_niz()
+lrparser = LRparser({0: {'$': Redukcija(4, ['$'], "<A>"), 'a': Pomak(1), 'b': Pomak(2)}, 1: {'$': None, 'a': Pomak(1), 'b': Pomak(2)}, 2: {'$': Redukcija(3, ['b'], "<B>"), 'a': Redukcija(3, ['b'], "<B>"), 'b': Redukcija(3, ['b'], "<B>")}, 3: {'$': Redukcija(2, ['a', '<B>'], "<B>"), 'a': Redukcija(2, ['a', '<B>'], "<B>"), 'b': Redukcija(2, ['a', '<B>'], "<B>")}, 4: {'$': Redukcija(4, ['$'], "<A>"), 'a': Pomak(1), 'b': Pomak(2)}, 5: {'$': Redukcija(1, ['<B>', '<A>'], "<A>"), 'a': None, 'b': None}, 6: {'$': Prihvat(), 'a': None, 'b': None}}, {0: {'<A>': 6, '<B>': 4}, 1: {'<A>': None, '<B>': 3}, 2: {'<A>': None, '<B>': None}, 3: {'<A>': None, '<B>': None}, 4: {'<A>': 5, '<B>': 4}, 5: {'<A>': None, '<B>': None}, 6: {'<A>': None, '<B>': None}})
+lrparser.parsiraj(ulazni_niz)
+lrparser.ispis_gen_stabla()

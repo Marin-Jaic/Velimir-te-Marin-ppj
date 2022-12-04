@@ -12,7 +12,7 @@ class Enka:
         # Ako se piše samo stavka onda je 0. stavka .S jer je produkcija S' -> S
         #self.stanja = {0: Stanje(0, ["<S'>"], ["$"]), 1: Stanje(1, [".", pocetno_stanje], ["$"])}
 
-        self.stanja = {0: Stanje(1, [".", pocetno_stanje], ["$"])}
+        self.stanja = {0: Stanje(0, [".", pocetno_stanje], ["$"])} #pazi na numeraciju, mozda se zezna
 
         self.prijelazi = {0: {"$": [1]}}
 
@@ -31,7 +31,6 @@ class Enka:
                 break
 
         if sljedece_stanje_id is None:
-            #print(self.broj_stanja, nova_stavka, t_crtano)
             sljedece_stanje_id = self.broj_stanja
             sljedece_stanje = Stanje(sljedece_stanje_id, nova_stavka, t_crtano)
 
@@ -58,18 +57,6 @@ class Enka:
 
             t_crtano = set()
 
-            # if index + 2 == len(stanje.stavka):
-            #     t_crtano.add("$")
-            # elif stanje.stavka[index + 2] in zavrsni_znakovi:
-            #     t_crtano.add(trenutni_znak)
-            # else:
-            #     t_crtano.update(self.t_skup[stanje.stavka[index + 2]][:])
-
-            #     for produkcija in self.produkcije[trenutni_znak]:
-            #         if "$" in produkcija.ds:
-            #             t_crtano.update(stanje.t)
-            #             break
-
             i = index + 2
             dodaj_sljedeci = True
 
@@ -78,7 +65,7 @@ class Enka:
 
                 if stanje.stavka[i] in self.zavrsni_znakovi:
                     t_crtano.add(stanje.stavka[i])
-                elif i + 1 != len(stanje.stavka):
+                else:
                     t_crtano.update(self.t_skup[stanje.stavka[i]][:])
 
                     for produkcija in self.produkcije[stanje.stavka[i]]:
@@ -89,7 +76,7 @@ class Enka:
                 i += 1
             
             if i == len(stanje.stavka) and dodaj_sljedeci:
-                    t_crtano.update(stanje.t)
+                t_crtano.update(stanje.t)
 
             
             t_crtano = list(t_crtano)
@@ -103,6 +90,9 @@ class Enka:
                 nova_stavka = produkcija.ds[:]
                 if "$" in nova_stavka: nova_stavka.remove("$")
                 nova_stavka.insert(0, ".")
+
+                if stanje.stavka == [".", "<A>"]:
+                    print(nova_stavka)
 
                 if self.dodaj_prijelaz(stanje.id, "$", nova_stavka, t_crtano):
                     self.generiraj(self.stanja[self.broj_stanja - 1])
@@ -386,9 +376,9 @@ def generiraj_lr_parser():
     enka = Enka(nezavrsni_znakovi, zavrsni_znakovi, produkcije, nezavrsni_znakovi[0], gramatika.t_skup)
     print("Tskup", gramatika.t_skup)
     print(enka)
+    gramatika.produkcije['<S\'>'] = [ulaz.produkcija(0, ['<S\'>'], ['S'])]
     dka = Dka(enka)
     dka.ispis()
-    gramatika.produkcije['<S\'>'] = [ulaz.produkcija(0, ['<S\'>'], ['S'])]
 
 
     return LRparser(dka, gramatika)
