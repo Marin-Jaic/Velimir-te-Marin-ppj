@@ -1,10 +1,10 @@
-%V <A> <B>
-%T a b
-%Syn b
-<A>
- <B> <A>
-<B>
- a <B>
- b
-<A>
- $
+%V <expr> <atom>
+%T OPERAND OP_MINUS UMINUS LIJEVA_ZAGRADA DESNA_ZAGRADA
+%Syn OPERAND UMINUS LIJEVA_ZAGRADA
+<atom>
+ OPERAND
+ UMINUS <atom>
+ LIJEVA_ZAGRADA <expr> DESNA_ZAGRADA
+<expr>
+ <atom>
+ <expr> OP_MINUS <atom>

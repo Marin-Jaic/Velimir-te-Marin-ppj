@@ -123,7 +123,7 @@ class Enka:
     
     def __str__(self):
         output = dumps(self.prijelazi)
-
+        return output
         for i in reversed(range(self.broj_stanja)):
             output = output.replace(str(i), "".join(self.stanja[i].stavka) + ", T(" + ",".join(self.stanja[i].t) + ")")
             #output = output.replace(str(i), "".join(self.stanja[i].stavka))
@@ -136,6 +136,9 @@ class Stanje:
         self.id = id
         self.stavka = stavka
         self.t = t
+        
+    def __repr__(self):
+        return "(" + str(self.id) + ") -> " + str(self.stavka) + " " + str(self.t)
 
     def __hash__(self):
         return hash(self.id) ^ hash("".join(self.stavka)) ^ hash("".join(self.t))
@@ -145,6 +148,7 @@ class StavkaSkup:
         self.stavka = stavka
         self.skup = skup
 
+    
     def __hash__(self):
         return hash("".join(self.stavka)) ^ hash(self.skup)
     
@@ -189,16 +193,18 @@ class Dka:
                 if '$' in pr.keys():
                     for z in pr['$']:
                         if z not in bio_e:
-                            okolina += self.eokolina([z], pr, bio_e + [z])
+                            okolina += self.eokolina([z], pr, bio_e.copy() + [z])
                             bio_e += [z]
         return okolina
 
-
+    """ 
     def dodaj_bivana_stanja(self, bio, stanje):
         for stanje in stanje:
             bio[stanje] = 1
 
     def grupiraj_eokoline(self, br_stanja, prijelazi):
+
+        
         nova_stanja = [self.eokolina([0], prijelazi, [])]
         bio = [0 for i in range(0, br_stanja)]
         self.dodaj_bivana_stanja(bio, nova_stanja[0])
@@ -215,30 +221,29 @@ class Dka:
         return nova_nova_stanja
 
 
+    
+
+
+    
+
+    
+
+    def enka_u_dka(self, enka):
+        nova_stanja = self.grupiraj_eokoline(enka.broj_stanja, enka.prijelazi)
+        
+        novi_prijelazi = self.ekstrapoliraj_prijelaze(nova_stanja, enka.prijelazi)
+        return self.preimenovanje_grupiranih_stanja(nova_stanja, novi_prijelazi, enka.stanja)
+    """
+
     def stanja_koje_sadrzavaju(self, stanja, trazeno):
         ret = []
         for stanje in stanja:
             if any(item in trazeno for item in stanje):
                 ret += [stanje]
         if(len(ret) > 1):
+            print(trazeno, ret)
             print("ERROR - gruirano stanje ima više slijedecih stanja za ulazni znak (nije DKA nego NKA)", file=sys.stderr)
         return ret[0]
-
-
-    def ekstrapoliraj_prijelaze(self, stanja, enka_prijelazi):
-        prijelazi = dict()
-
-        for grupno_stanje in stanja:
-            prijelazi[grupno_stanje] = dict()
-            for stanje in grupno_stanje:
-                if stanje not in enka_prijelazi.keys():
-                    continue
-                for znak in enka_prijelazi[stanje].keys():
-                    if znak == '$':
-                        continue
-                    prijelazi[grupno_stanje][znak] = self.stanja_koje_sadrzavaju(stanja, enka_prijelazi[stanje][znak])
-
-        return prijelazi
 
     def preimenovanje_grupiranih_stanja(self, stanja, prijelazi, enka_stanja):
         pretvorba = dict()
@@ -258,10 +263,64 @@ class Dka:
 
         return lista_stanja, novi_prijelazi
 
+    def ekstrapoliraj_prijelaze(self, stanja, enka_prijelazi):
+        prijelazi = dict()
+
+        for grupno_stanje in stanja:
+            prijelazi[grupno_stanje] = dict()
+            for stanje in grupno_stanje:
+                if stanje not in enka_prijelazi.keys():
+                    continue
+                for znak in enka_prijelazi[stanje].keys():
+                    if znak == '$':
+                        continue
+                    prijelazi[grupno_stanje][znak] = self.stanja_koje_sadrzavaju(stanja, enka_prijelazi[stanje][znak])
+
+        return prijelazi
+
     def enka_u_dka(self, enka):
-        nova_stanja = self.grupiraj_eokoline(enka.broj_stanja, enka.prijelazi)
-        novi_prijelazi = self.ekstrapoliraj_prijelaze(nova_stanja, enka.prijelazi)
-        return self.preimenovanje_grupiranih_stanja(nova_stanja, novi_prijelazi, enka.stanja)
+        pocetno_stanje = self.eokolina([0], enka.prijelazi, [])
+        print(pocetno_stanje)
+        dodano_novo = 1
+        indeks = 0
+        velicina = 1
+        stanja = [frozenset(pocetno_stanje)]
+        prijelazovi = dict()
+        prijelazovi[stanja[0]] = dict()
+
+        while(dodano_novo == 1 or indeks < velicina):
+            dodano_novo = 0
+            for znak in enka.zavrsni_znakovi + enka.nezavrsni_znakovi:
+                print(znak)
+                novo = []
+                for podstanje in stanja[indeks]:
+                    if podstanje not in enka.prijelazi.keys():
+                        continue
+                    pr = enka.prijelazi[podstanje]
+                    if(znak in pr.keys()):
+                        novo += self.eokolina(pr[znak], enka.prijelazi, [])
+                if novo != []:
+                    print(novo)
+                    fs = frozenset(novo)
+                    if(fs not in stanja):
+                        stanja += [fs]
+                        prijelazovi[stanja[indeks]][znak] = fs
+                        prijelazovi[fs] = dict()
+                        dodano_novo = 1
+                        velicina += 1
+                    else:
+                        prijelazovi[stanja[indeks]][znak] = fs
+            indeks += 1
+        print(stanja)
+        for s in stanja:
+            print(s)
+            for p in s:
+                print(enka.stanja[p])
+
+        #prijelazovi = self.ekstrapoliraj_prijelaze(stanja, enka.prijelazi)
+        print(prijelazovi)
+        return self.preimenovanje_grupiranih_stanja(stanja, prijelazovi, enka.stanja)
+
 
     def __str__(self):
         st = "Stanja:\n"
@@ -379,7 +438,7 @@ def generiraj_lr_parser():
     gramatika = ulaz.Gramatika(nezavrsni_znakovi, zavrsni_znakovi, produkcije)
     enka = Enka(nezavrsni_znakovi, zavrsni_znakovi, produkcije, nezavrsni_znakovi[0], gramatika.t_skup)
     #print("Tskup", gramatika.t_skup)
-    #print(enka)
+    print(enka)
     #print(zavrsni_znakovi)
     #print(nezavrsni_znakovi)
     dka = Dka(enka)
