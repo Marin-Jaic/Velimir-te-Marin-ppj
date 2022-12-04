@@ -25,14 +25,14 @@ class Enka:
         novo_stanje_stvoreno = True
 
         for postojece_stanje in self.stanja.values():
-            if nova_stavka == postojece_stanje.stavka and t_crtano == postojece_stanje.t and  postojece_stanje.ls:
+            if nova_stavka == postojece_stanje.stavka and t_crtano == postojece_stanje.t and  ls == postojece_stanje.ls:
                 sljedece_stanje_id = postojece_stanje.id
                 novo_stanje_stvoreno = False
                 break
 
         if sljedece_stanje_id is None:
             sljedece_stanje_id = self.broj_stanja
-            sljedece_stanje = Stanje(sljedece_stanje_id, nova_stavka, t_crtano)
+            sljedece_stanje = Stanje(sljedece_stanje_id, ls, nova_stavka, t_crtano)
 
             self.stanja[sljedece_stanje_id] = sljedece_stanje
 
@@ -92,7 +92,7 @@ class Enka:
                 nova_stavka.insert(0, ".")
 
                 
-                if self.dodaj_prijelaz(stanje.id, "$", nova_stavka, t_crtano):
+                if self.dodaj_prijelaz(stanje.id, "$", trenutni_znak, nova_stavka, t_crtano):
                     self.generiraj(self.stanja[self.broj_stanja - 1])
 
             #NAKON EPSILON PRIJELAZA ODRADUJEMO OBICNI PRIJELAZ
@@ -103,7 +103,7 @@ class Enka:
 
             self.prijelazi[stanje.id][trenutni_znak] = []
 
-            if self.dodaj_prijelaz(stanje.id, trenutni_znak, nova_stavka, t_crtano):
+            if self.dodaj_prijelaz(stanje.id, trenutni_znak, stanje.ls, nova_stavka, t_crtano):
                 self.generiraj(self.stanja[self.broj_stanja - 1])
 
         else:
@@ -114,16 +114,15 @@ class Enka:
 
             self.prijelazi[stanje.id][trenutni_znak] = []
 
-            if self.dodaj_prijelaz(stanje.id, trenutni_znak, nova_stavka, t_crtano):
+            if self.dodaj_prijelaz(stanje.id, trenutni_znak, stanje.ls, nova_stavka, t_crtano):
                 self.generiraj(self.stanja[self.broj_stanja - 1])
     
         return
     
     def __str__(self):
         output = dumps(self.prijelazi)
-        return output
         for i in reversed(range(self.broj_stanja)):
-            output = output.replace(str(i), "".join(self.stanja[i].stavka) + ", T(" + ",".join(self.stanja[i].t) + ")")
+            output = output.replace(str(i), self.stanja[i].ls + " -> " + "".join(self.stanja[i].stavka) + ", T(" + ",".join(self.stanja[i].t) + ")")
             #output = output.replace(str(i), "".join(self.stanja[i].stavka))
         return output
     
