@@ -12,11 +12,24 @@ class LRparser:
     
 
     def oporavakOdGreske(self, ulazni_niz, iterator, syn_znakovi):
+        
+        print("Pogreška u retku: ", ulazni_niz[iterator].red, file=sys.stderr)
+        print("Znakovi koji mogu slijediti su: ", file=sys.stderr)
+        proslo = self.stog.peek(1)[0].stanje
+        lista_mogucih = []
+        for znak in self.akcija[proslo].keys():
+            if self.akcija[proslo][znak] != None:
+                lista_mogucih += [znak]
+        print(lista_mogucih, file=sys.stderr)
+        print("Uniformni znak: ", ulazni_niz[iterator].znak, file=sys.stderr)
+        print("Znakovni prikaz: ", ulazni_niz[iterator].unif, file=sys.stderr)
+        print("", file=sys.stderr)
+
         while(ulazni_niz[iterator].znak not in syn_znakovi):
             iterator += 1
 
         while(self.akcija[self.stog.peek(1)[0].stanje][ulazni_niz[iterator].znak] == None):
-            print(self.stog.pop(1), file = sys.stderr)
+            self.stog.pop(1)
             
         
         return iterator
@@ -75,6 +88,7 @@ class LRparser:
 
 def dohvati_ulazni_niz():
     #ulazna_dat = open('test/analizator/input.txt', 'r')
+    #retci = ulazna_dat.read().split("\n")
     retci = sys.stdin.read().split("\n")
 
     niz = []
