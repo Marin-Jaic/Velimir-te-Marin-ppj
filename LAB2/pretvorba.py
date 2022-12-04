@@ -325,32 +325,35 @@ class LRparser:
                 self.novo_stanje[stanje.id][znak] = None
         
         for stanje in dka.stanja:
+            if(stanje.id == 33): print(dka.prijelazi[stanje])
             for stavka_skup in stanje.stavke_skupovi:
                 stavka = stavka_skup.stavka
                 skup = stavka_skup.skup
-
+                
                 # Prihvat
                 if(stavka == [gramatika.nezavrsni_znakovi[0], "."]):
                     self.akcija[stanje.id]['$'] = Prihvat()
 
                 # Redukcija
                 elif(stavka.index(".") == len(stavka) - 1):
-                    for znak in skup:
-                        min_produkcija = None
-                        min_id = None
-                        stavka_bez_tocke = stavka[:]
-                        stavka_bez_tocke.remove('.')
-                        if(stavka_bez_tocke == []):
-                            stavka_bez_tocke = ['$']
-                        for key in gramatika.produkcije.keys():
-                            for produkcija in gramatika.produkcije[key]:
-                                if produkcija.ds == stavka_bez_tocke:
-                                    if min_id == None or produkcija.id < min_id:
-                                        min_id = produkcija.id
-                                        min_produkcija = produkcija
+                    
+                    min_produkcija = None
+                    min_id = None
+                    stavka_bez_tocke = stavka[:]
+                    stavka_bez_tocke.remove('.')
+                    if(stavka_bez_tocke == []):
+                        stavka_bez_tocke = ['$']
+                    for key in gramatika.produkcije.keys():
+                        for prod in gramatika.produkcije[key]:
+                            if(prod.ds == ["<S\'>"]):
+                                continue
+                            if prod.ds == stavka_bez_tocke:
+                                if min_id == None or prod.id < min_id:
+                                    min_id = prod.id
+                                    min_produkcija = prod
                     
                     for t_znak in skup:
-                        if not isinstance(self.akcija[stanje.id][znak], Pomak) and (not isinstance(self.akcija[stanje.id][t_znak], Redukcija) or self.akcija[stanje.id][t_znak].id > min_id):
+                        if not isinstance(self.akcija[stanje.id][t_znak], Pomak) and (not isinstance(self.akcija[stanje.id][t_znak], Redukcija) or self.akcija[stanje.id][t_znak].id > min_id):
                             self.akcija[stanje.id][t_znak] = Redukcija(min_produkcija) #pronadi_produkciju_te_stavke
                         
                 # Pomak
@@ -360,6 +363,7 @@ class LRparser:
 
                 # Novo stanje
                 elif(stavka[stavka.index(".") + 1] in gramatika.nezavrsni_znakovi):
+                    #print(stanje.id, stavka, stavka[stavka.index(".") + 1], dka.prijelazi[stanje][stavka[stavka.index(".") + 1]].id)
                     tmp = stavka[stavka.index(".") + 1]
                     self.novo_stanje[stanje.id][tmp] = dka.prijelazi[stanje][tmp].id
 
@@ -374,13 +378,14 @@ def generiraj_lr_parser():
     nezavrsni_znakovi, zavrsni_znakovi, syn_znakovi, produkcije = ulaz.ulaz()
     gramatika = ulaz.Gramatika(nezavrsni_znakovi, zavrsni_znakovi, produkcije)
     enka = Enka(nezavrsni_znakovi, zavrsni_znakovi, produkcije, nezavrsni_znakovi[0], gramatika.t_skup)
-    print("Tskup", gramatika.t_skup)
-    print(enka)
-    gramatika.produkcije['<S\'>'] = [ulaz.produkcija(0, ['<S\'>'], ['S'])]
+    #print("Tskup", gramatika.t_skup)
+    #print(enka)
+    #print(zavrsni_znakovi)
+    #print(nezavrsni_znakovi)
     dka = Dka(enka)
-    dka.ispis()
+    #dka.ispis()
 
-
-    return LRparser(dka, gramatika)
+    gramatika.produkcije['<S\'>'] = [ulaz.produkcija(0, ['<S\'>'], [nezavrsni_znakovi[0]])]
+    return LRparser(dka, gramatika), syn_znakovi
 
 generiraj_lr_parser()

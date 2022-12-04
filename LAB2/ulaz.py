@@ -63,7 +63,7 @@ class produkcija:
 
 
 def ulaz():
-    file_object = open('test/input3.txt', 'r')
+    file_object = open('test/laksi.txt', 'r')
     lines = file_object.read().splitlines()
     file_object.close()
 
