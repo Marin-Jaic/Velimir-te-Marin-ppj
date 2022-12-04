@@ -28,6 +28,11 @@ class List(Cvor):
         super().__init__(stanje, ulazniZnak.znak)
     def __str__(self):
         return self.znak + " " + self.red + " " + self.unif
+class ListEps(Cvor):
+    def __init__(self):
+        self.znak = "$"
+    def __str__(self):
+        return self.znak
 
 class UnutarnjiCvor(Cvor):
     def __init__(self, stanje, znak, djeca):

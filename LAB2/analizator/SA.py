@@ -1,6 +1,6 @@
 #TODO oporavak od pogreške!
 
-
+import sys
 from pomocni_razredi import *
 
 class LRparser:
@@ -12,10 +12,12 @@ class LRparser:
     
 
     def oporavakOdGreske(self, ulazni_niz, iterator, syn_znakovi):
-        while(ulazni_niz[iterator] not in syn_znakovi):
+        print(syn_znakovi)
+        while(ulazni_niz[iterator].znak not in syn_znakovi):
+            print(ulazni_niz[iterator], iterator)
             iterator += 1
 
-        while(self.akcija[self.stog.peek(1)[0].stanje][ulazni_niz[iterator]] == None):
+        while(self.akcija[self.stog.peek(1)[0].stanje][ulazni_niz[iterator].znak] == None):
             print(self.stog.pop(1), file = sys.stderr)
             
         
@@ -47,7 +49,7 @@ class LRparser:
                     self.stog.push(novi_cvor)
                 elif(redukcija.uzorak == ['$']):
                     print("red eps", self.stog.peek(1)[0].stanje, redukcija.novi)
-                    novi_cvor = UnutarnjiCvor(-1, redukcija.novi, ['$'])
+                    novi_cvor = UnutarnjiCvor(-1, redukcija.novi, [ListEps()])
                     novi_cvor.stanje = self.novo_stanje[self.stog.peek(1)[0].stanje][redukcija.novi]
                     self.stog.push(novi_cvor)
                 else:
@@ -60,16 +62,16 @@ class LRparser:
                 break
 
             else:
-                #iterator = self.oporavakOdGreske(ulazni_niz, iterator, syn_znakovi)
-                print("GREŠKA - Odbacivanje ulaznog niza po tablici Akcija")
+                iterator = self.oporavakOdGreske(ulazni_niz, iterator, syn_znakovi)
+                #print("GREŠKA - Odbacivanje ulaznog niza po tablici Akcija")
                 
-                break
+                
 
     def ispis_razine(self, cvorovi, n):
         for cvor in cvorovi:
             for i in range(n):
                 print(" ", end="")
-            if(isinstance(cvor, List)):
+            if(isinstance(cvor, List) or isinstance(cvor, ListEps)):
                 print(cvor)
             elif(isinstance(cvor, UnutarnjiCvor)):
                 print(cvor.znak)
@@ -93,9 +95,7 @@ def dohvati_ulazni_niz():
 
 #------------------SVE ISPOD OVE CRTE JE DODANO OD STRANE GSA:--------------------------
 
-
-
 ulazni_niz = dohvati_ulazni_niz()
-lrparser = LRparser({0: {'$': None, 'OPERAND': Pomak(1), 'OP_MINUS': None, 'UMINUS': Pomak(2), 'LIJEVA_ZAGRADA': Pomak(3), 'DESNA_ZAGRADA': None}, 1: {'$': Redukcija(1, ['OPERAND'], "<atom>"), 'OPERAND': None, 'OP_MINUS': Redukcija(1, ['OPERAND'], "<atom>"), 'UMINUS': None, 'LIJEVA_ZAGRADA': None, 'DESNA_ZAGRADA': None}, 2: {'$': None, 'OPERAND': Pomak(1), 'OP_MINUS': None, 'UMINUS': Pomak(2), 'LIJEVA_ZAGRADA': Pomak(3), 'DESNA_ZAGRADA': None}, 3: {'$': None, 'OPERAND': Pomak(7), 'OP_MINUS': None, 'UMINUS': Pomak(8), 'LIJEVA_ZAGRADA': Pomak(9), 'DESNA_ZAGRADA': None}, 4: {'$': Prihvat(), 'OPERAND': None, 'OP_MINUS': Pomak(12), 'UMINUS': None, 'LIJEVA_ZAGRADA': None, 'DESNA_ZAGRADA': None}, 5: {'$': Redukcija(4, ['<atom>'], "<expr>"), 'OPERAND': None, 'OP_MINUS': Redukcija(4, ['<atom>'], "<expr>"), 'UMINUS': None, 'LIJEVA_ZAGRADA': None, 'DESNA_ZAGRADA': None}, 6: {'$': Redukcija(2, ['UMINUS', '<atom>'], "<atom>"), 'OPERAND': None, 'OP_MINUS': Redukcija(2, ['UMINUS', '<atom>'], "<atom>"), 'UMINUS': None, 'LIJEVA_ZAGRADA': None, 'DESNA_ZAGRADA': None}, 7: {'$': None, 'OPERAND': None, 'OP_MINUS': Redukcija(1, ['OPERAND'], "<atom>"), 'UMINUS': None, 'LIJEVA_ZAGRADA': None, 'DESNA_ZAGRADA': Redukcija(1, ['OPERAND'], "<atom>")}, 8: {'$': None, 'OPERAND': Pomak(7), 'OP_MINUS': None, 'UMINUS': Pomak(8), 'LIJEVA_ZAGRADA': Pomak(9), 'DESNA_ZAGRADA': None}, 9: {'$': None, 'OPERAND': Pomak(7), 'OP_MINUS': None, 'UMINUS': Pomak(8), 'LIJEVA_ZAGRADA': Pomak(9), 'DESNA_ZAGRADA': None}, 10: {'$': None, 'OPERAND': None, 'OP_MINUS': Pomak(15), 'UMINUS': None, 'LIJEVA_ZAGRADA': None, 'DESNA_ZAGRADA': Pomak(16)}, 11: {'$': None, 'OPERAND': None, 'OP_MINUS': Redukcija(4, ['<atom>'], "<expr>"), 'UMINUS': None, 'LIJEVA_ZAGRADA': None, 'DESNA_ZAGRADA': Redukcija(4, ['<atom>'], "<expr>")}, 12: {'$': None, 'OPERAND': Pomak(1), 'OP_MINUS': None, 'UMINUS': Pomak(2), 'LIJEVA_ZAGRADA': Pomak(3), 'DESNA_ZAGRADA': None}, 13: {'$': None, 'OPERAND': None, 'OP_MINUS': Redukcija(2, ['UMINUS', '<atom>'], "<atom>"), 'UMINUS': None, 'LIJEVA_ZAGRADA': None, 'DESNA_ZAGRADA': Redukcija(2, ['UMINUS', '<atom>'], "<atom>")}, 14: {'$': None, 'OPERAND': None, 'OP_MINUS': Pomak(15), 'UMINUS': None, 'LIJEVA_ZAGRADA': None, 'DESNA_ZAGRADA': Pomak(18)}, 15: {'$': None, 'OPERAND': Pomak(7), 'OP_MINUS': None, 'UMINUS': Pomak(8), 'LIJEVA_ZAGRADA': Pomak(9), 'DESNA_ZAGRADA': None}, 16: {'$': Redukcija(3, ['LIJEVA_ZAGRADA', '<expr>', 'DESNA_ZAGRADA'], "<atom>"), 'OPERAND': None, 'OP_MINUS': Redukcija(3, ['LIJEVA_ZAGRADA', '<expr>', 'DESNA_ZAGRADA'], "<atom>"), 'UMINUS': None, 'LIJEVA_ZAGRADA': None, 'DESNA_ZAGRADA': None}, 17: {'$': Redukcija(5, ['<expr>', 'OP_MINUS', '<atom>'], "<expr>"), 'OPERAND': None, 'OP_MINUS': Redukcija(5, ['<expr>', 'OP_MINUS', '<atom>'], "<expr>"), 'UMINUS': None, 'LIJEVA_ZAGRADA': None, 'DESNA_ZAGRADA': None}, 18: {'$': None, 'OPERAND': None, 'OP_MINUS': Redukcija(3, ['LIJEVA_ZAGRADA', '<expr>', 'DESNA_ZAGRADA'], "<atom>"), 'UMINUS': None, 'LIJEVA_ZAGRADA': None, 'DESNA_ZAGRADA': Redukcija(3, ['LIJEVA_ZAGRADA', '<expr>', 'DESNA_ZAGRADA'], "<atom>")}, 19: {'$': None, 'OPERAND': None, 'OP_MINUS': Redukcija(5, ['<expr>', 'OP_MINUS', '<atom>'], "<expr>"), 'UMINUS': None, 'LIJEVA_ZAGRADA': None, 'DESNA_ZAGRADA': Redukcija(5, ['<expr>', 'OP_MINUS', '<atom>'], "<expr>")}}, {0: {'<expr>': 4, '<atom>': 5}, 1: {'<expr>': None, '<atom>': None}, 2: {'<expr>': None, '<atom>': 6}, 3: {'<expr>': 10, '<atom>': 11}, 4: {'<expr>': None, '<atom>': None}, 5: {'<expr>': None, '<atom>': None}, 6: {'<expr>': None, '<atom>': None}, 7: {'<expr>': None, '<atom>': None}, 8: {'<expr>': None, '<atom>': 13}, 9: {'<expr>': 14, '<atom>': 11}, 10: {'<expr>': None, '<atom>': None}, 11: {'<expr>': None, '<atom>': None}, 12: {'<expr>': None, '<atom>': 17}, 13: {'<expr>': None, '<atom>': None}, 14: {'<expr>': None, '<atom>': None}, 15: {'<expr>': None, '<atom>': 19}, 16: {'<expr>': None, '<atom>': None}, 17: {'<expr>': None, '<atom>': None}, 18: {'<expr>': None, '<atom>': None}, 19: {'<expr>': None, '<atom>': None}})
-lrparser.parsiraj(ulazni_niz, ['OPERAND', 'UMINUS', 'LIJEVA_ZAGRADA'])
+lrparser = LRparser({0: {'$': None, 'a': Redukcija(5, ['$'], "<A>"), 'b': Redukcija(5, ['$'], "<A>")}, 1: {'$': Prihvat(), 'a': None, 'b': None}, 2: {'$': Redukcija(2, ['<X>'], "<S>"), 'a': Redukcija(5, ['$'], "<A>"), 'b': Redukcija(5, ['$'], "<A>")}, 3: {'$': None, 'a': Pomak(6), 'b': None}, 4: {'$': None, 'a': None, 'b': Pomak(7)}, 5: {'$': Redukcija(1, ['<X>', '<S>'], "<S>"), 'a': None, 'b': None}, 6: {'$': None, 'a': None, 'b': Redukcija(5, ['$'], "<A>")}, 7: {'$': None, 'a': Redukcija(5, ['$'], "<A>"), 'b': None}, 8: {'$': None, 'a': None, 'b': Pomak(10)}, 9: {'$': None, 'a': Pomak(11), 'b': None}, 10: {'$': Redukcija(3, ['<A>', 'a', '<A>', 'b'], "<X>"), 'a': Redukcija(3, ['<A>', 'a', '<A>', 'b'], "<X>"), 'b': Redukcija(3, ['<A>', 'a', '<A>', 'b'], "<X>")}, 11: {'$': Redukcija(4, ['<B>', 'b', '<B>', 'a'], "<X>"), 'a': Redukcija(4, ['<B>', 'b', '<B>', 'a'], "<X>"), 'b': Redukcija(4, ['<B>', 'b', '<B>', 'a'], "<X>")}}, {0: {'<S>': 1, '<X>': 2, '<A>': 3, '<B>': 4}, 1: {'<S>': None, '<X>': None, '<A>': None, '<B>': None}, 2: {'<S>': 5, '<X>': 2, '<A>': 3, '<B>': 4}, 3: {'<S>': None, '<X>': None, '<A>': None, '<B>': None}, 4: {'<S>': None, '<X>': None, '<A>': None, '<B>': None}, 5: {'<S>': None, '<X>': None, '<A>': None, '<B>': None}, 6: {'<S>': None, '<X>': None, '<A>': 8, '<B>': None}, 7: {'<S>': None, '<X>': None, '<A>': None, '<B>': 9}, 8: {'<S>': None, '<X>': None, '<A>': None, '<B>': None}, 9: {'<S>': None, '<X>': None, '<A>': None, '<B>': None}, 10: {'<S>': None, '<X>': None, '<A>': None, '<B>': None}, 11: {'<S>': None, '<X>': None, '<A>': None, '<B>': None}})
+lrparser.parsiraj(ulazni_niz, ['a'])
 lrparser.ispis_gen_stabla()

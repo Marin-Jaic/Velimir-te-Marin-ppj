@@ -1,8 +1,13 @@
-%V <S> <A>
-%T b a ( ) L
+%V <S> <X> <A> <B>
+%T a b
 %Syn a
 <S>
- b <A> a
+ <X> <S>
+ <X>
+<X>
+ <A> a <A> b
+ <B> b <B> a
 <A>
- ( b <A> )
- L
+ $
+<B>
+ $

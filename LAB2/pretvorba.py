@@ -12,7 +12,7 @@ class Enka:
         # Ako se piše samo stavka onda je 0. stavka .S jer je produkcija S' -> S
         #self.stanja = {0: Stanje(0, ["<S'>"], ["$"]), 1: Stanje(1, [".", pocetno_stanje], ["$"])}
 
-        self.stanja = {0: Stanje(0, [".", pocetno_stanje], ["$"])} #pazi na numeraciju, mozda se zezna
+        self.stanja = {0: Stanje(0, "<S'>", [".", pocetno_stanje], ["$"])} #pazi na numeraciju, mozda se zezna
 
         self.prijelazi = {0: {"$": [1]}}
 
@@ -20,12 +20,12 @@ class Enka:
 
         self.generiraj(self.stanja[0]) # pazi i ovo
     
-    def dodaj_prijelaz(self, id, znak, nova_stavka, t_crtano):
+    def dodaj_prijelaz(self, id, znak, ls, nova_stavka, t_crtano):
         sljedece_stanje_id = None
         novo_stanje_stvoreno = True
 
         for postojece_stanje in self.stanja.values():
-            if nova_stavka == postojece_stanje.stavka and t_crtano == postojece_stanje.t:
+            if nova_stavka == postojece_stanje.stavka and t_crtano == postojece_stanje.t and  postojece_stanje.ls:
                 sljedece_stanje_id = postojece_stanje.id
                 novo_stanje_stvoreno = False
                 break
@@ -91,9 +91,7 @@ class Enka:
                 if "$" in nova_stavka: nova_stavka.remove("$")
                 nova_stavka.insert(0, ".")
 
-                if stanje.stavka == [".", "<A>"]:
-                    print(nova_stavka)
-
+                
                 if self.dodaj_prijelaz(stanje.id, "$", nova_stavka, t_crtano):
                     self.generiraj(self.stanja[self.broj_stanja - 1])
 
@@ -132,7 +130,8 @@ class Enka:
 
 #mislim da je uglavnom dobro
 class Stanje:
-    def __init__(self, id, stavka, t):
+    def __init__(self, id, ls, stavka, t):
+        self.ls = ls
         self.id = id
         self.stavka = stavka
         self.t = t
@@ -141,19 +140,20 @@ class Stanje:
         return "(" + str(self.id) + ") -> " + str(self.stavka) + " " + str(self.t)
 
     def __hash__(self):
-        return hash(self.id) ^ hash("".join(self.stavka)) ^ hash("".join(self.t))
+        return hash(self.id) ^ hash("".join(self.stavka)) ^ hash("".join(self.t)) ^ hash(self.ls)
 
 class StavkaSkup:
-    def __init__(self, stavka, skup):
+    def __init__(self, ls, stavka, skup):
+        self.ls = ls
         self.stavka = stavka
         self.skup = skup
 
     
     def __hash__(self):
-        return hash("".join(self.stavka)) ^ hash(self.skup)
+        return hash("".join(self.stavka)) ^ hash(self.skup) ^ hash(self.ls)
     
     def __repr__(self):
-        return str(self.stavka) + " " + str(self.skup)
+        return str(self.ls) + " " +str(self.stavka) + " " + str(self.skup)
 
 class DKAStanje:
 
@@ -164,7 +164,7 @@ class DKAStanje:
 
         for stanje in set_starih_stanja:
             ss = tuple()
-            self.stavke_skupovi.add(StavkaSkup(opisi_stanja[stanje].stavka, frozenset(opisi_stanja[stanje].t)))
+            self.stavke_skupovi.add(StavkaSkup(opisi_stanja[stanje].ls, opisi_stanja[stanje].stavka, frozenset(opisi_stanja[stanje].t)))
 
     def __repr__(self):
         return "(" + str(self.id) + ") -> " + str(self.stavke_skupovi)
@@ -241,7 +241,6 @@ class Dka:
             if any(item in trazeno for item in stanje):
                 ret += [stanje]
         if(len(ret) > 1):
-            print(trazeno, ret)
             print("ERROR - gruirano stanje ima više slijedecih stanja za ulazni znak (nije DKA nego NKA)", file=sys.stderr)
         return ret[0]
 
@@ -280,7 +279,6 @@ class Dka:
 
     def enka_u_dka(self, enka):
         pocetno_stanje = self.eokolina([0], enka.prijelazi, [])
-        print(pocetno_stanje)
         dodano_novo = 1
         indeks = 0
         velicina = 1
@@ -291,7 +289,6 @@ class Dka:
         while(dodano_novo == 1 or indeks < velicina):
             dodano_novo = 0
             for znak in enka.zavrsni_znakovi + enka.nezavrsni_znakovi:
-                print(znak)
                 novo = []
                 for podstanje in stanja[indeks]:
                     if podstanje not in enka.prijelazi.keys():
@@ -300,7 +297,6 @@ class Dka:
                     if(znak in pr.keys()):
                         novo += self.eokolina(pr[znak], enka.prijelazi, [])
                 if novo != []:
-                    print(novo)
                     fs = frozenset(novo)
                     if(fs not in stanja):
                         stanja += [fs]
@@ -311,14 +307,9 @@ class Dka:
                     else:
                         prijelazovi[stanja[indeks]][znak] = fs
             indeks += 1
-        print(stanja)
-        for s in stanja:
-            print(s)
-            for p in s:
-                print(enka.stanja[p])
-
-        #prijelazovi = self.ekstrapoliraj_prijelaze(stanja, enka.prijelazi)
+    
         print(prijelazovi)
+        #prijelazovi = self.ekstrapoliraj_prijelaze(stanja, enka.prijelazi)
         return self.preimenovanje_grupiranih_stanja(stanja, prijelazovi, enka.stanja)
 
 
@@ -384,7 +375,11 @@ class LRparser:
                 self.novo_stanje[stanje.id][znak] = None
         
         for stanje in dka.stanja:
-            if(stanje.id == 33): print(dka.prijelazi[stanje])
+            for key in dka.prijelazi[stanje].keys():
+                if key in gramatika.nezavrsni_znakovi:
+                    self.novo_stanje[stanje.id][key] = dka.prijelazi[stanje][key].id
+
+        for stanje in dka.stanja:
             for stavka_skup in stanje.stavke_skupovi:
                 stavka = stavka_skup.stavka
                 skup = stavka_skup.skup
@@ -421,10 +416,10 @@ class LRparser:
                     self.akcija[stanje.id][tmp] = Pomak(dka.prijelazi[stanje][tmp].id)
 
                 # Novo stanje
-                elif(stavka[stavka.index(".") + 1] in gramatika.nezavrsni_znakovi):
-                    #print(stanje.id, stavka, stavka[stavka.index(".") + 1], dka.prijelazi[stanje][stavka[stavka.index(".") + 1]].id)
-                    tmp = stavka[stavka.index(".") + 1]
-                    self.novo_stanje[stanje.id][tmp] = dka.prijelazi[stanje][tmp].id
+                #elif(stavka[stavka.index(".") + 1] in gramatika.nezavrsni_znakovi):
+                #    #print(stanje.id, stavka, stavka[stavka.index(".") + 1], dka.prijelazi[stanje][stavka[stavka.index(".") + 1]].id)
+                #    tmp = stavka[stavka.index(".") + 1]
+                #    self.novo_stanje[stanje.id][tmp] = dka.prijelazi[stanje][tmp].id
 
     def __repr__(self):
         return "LRparser(" + str(self.akcija) + ", " + str(self.novo_stanje) + ")"
