@@ -240,7 +240,8 @@ class Dka:
             if any(item in trazeno for item in stanje):
                 ret += [stanje]
         if(len(ret) > 1):
-            print("ERROR - gruirano stanje ima više slijedecih stanja za ulazni znak (nije DKA nego NKA)", file=sys.stderr)
+            #print("ERROR - gruirano stanje ima više slijedecih stanja za ulazni znak (nije DKA nego NKA)", file=sys.stderr)
+            pass
         return ret[0]
 
     def preimenovanje_grupiranih_stanja(self, stanja, prijelazi, enka_stanja):
@@ -307,7 +308,7 @@ class Dka:
                         prijelazovi[stanja[indeks]][znak] = fs
             indeks += 1
     
-        print(prijelazovi)
+        #print(prijelazovi)
         #prijelazovi = self.ekstrapoliraj_prijelaze(stanja, enka.prijelazi)
         return self.preimenovanje_grupiranih_stanja(stanja, prijelazovi, enka.stanja)
 
@@ -432,7 +433,7 @@ def generiraj_lr_parser():
     gramatika = ulaz.Gramatika(nezavrsni_znakovi, zavrsni_znakovi, produkcije)
     enka = Enka(nezavrsni_znakovi, zavrsni_znakovi, produkcije, nezavrsni_znakovi[0], gramatika.t_skup)
     #print("Tskup", gramatika.t_skup)
-    print(enka)
+    #print(enka)
     #print(zavrsni_znakovi)
     #print(nezavrsni_znakovi)
     dka = Dka(enka)
@@ -441,4 +442,3 @@ def generiraj_lr_parser():
     gramatika.produkcije['<S\'>'] = [ulaz.produkcija(0, ['<S\'>'], [nezavrsni_znakovi[0]])]
     return LRparser(dka, gramatika), syn_znakovi
 
-generiraj_lr_parser()

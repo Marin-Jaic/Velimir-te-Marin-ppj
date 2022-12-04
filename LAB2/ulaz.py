@@ -1,3 +1,5 @@
+import sys
+
 class Gramatika: #kinda beskorisna in the grand scheme of things, pomogla mi je s formatiranjem ulaza
     def __init__(self, nezavrsni_znakovi, zavrsni_znakovi, produkcije):
         self.nezavrsni_znakovi = nezavrsni_znakovi
@@ -114,10 +116,12 @@ class produkcija:
 
 
 def ulaz():
-    file_object = open('test/input2.txt', 'r')
-    lines = file_object.read().splitlines()
-    file_object.close()
+    #file_object = open('test/input2.txt', 'r')
+    #lines = file_object.read().splitlines()
+    #file_object.close()
 
+    lines = sys.stdin.read().split("\n")
+    
     nezavrsni_znakovi = lines[0][2:].strip().split(" ")
     zavrsni_znakovi = lines[1][2:].strip().split(" ")
     syn_znakovi = lines[2][4:].strip().split(" ")
@@ -130,6 +134,8 @@ def ulaz():
     counter = 1
 
     for line in lines:
+        if(len(line) == 0):
+            continue
         if line[0] == "<":
             # trenutni_lijevi = line[0:4] # štae ovo marine
             trenutni_lijevi = line[0:line.index(">") + 1]
