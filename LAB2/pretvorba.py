@@ -382,7 +382,7 @@ class LRparser:
             for stavka_skup in stanje.stavke_skupovi:
                 stavka = stavka_skup.stavka
                 skup = stavka_skup.skup
-                
+                lijevo = stavka_skup.ls
                 # Prihvat
                 if(stavka == [gramatika.nezavrsni_znakovi[0], "."]):
                     self.akcija[stanje.id]['$'] = Prihvat()
@@ -398,9 +398,9 @@ class LRparser:
                         stavka_bez_tocke = ['$']
                     for key in gramatika.produkcije.keys():
                         for prod in gramatika.produkcije[key]:
-                            if(prod.ds == ["<S\'>"]):
+                            if(prod.ls == ["<S\'>"]):
                                 continue
-                            if prod.ds == stavka_bez_tocke:
+                            if prod.ds == stavka_bez_tocke and lijevo == prod.ls:
                                 if min_id == None or prod.id < min_id:
                                     min_id = prod.id
                                     min_produkcija = prod
