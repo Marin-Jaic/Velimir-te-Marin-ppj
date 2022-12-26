@@ -13,7 +13,7 @@ def analiza(pocetno_stanje, stanja, akcije):
 
     #counter = 0 #SAMO ZA TEST, MAKNI
 
-    #file_object = open('test/input2.txt', 'r')
+    #file_object = open('ulazi/ulaz.txt', 'r')
     #ulaz = file_object.read()
     #file_object.close()
 

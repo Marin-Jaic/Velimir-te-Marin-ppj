@@ -1,35 +1,20 @@
-class Cvor:
-    def __init__(self, stanje, znak):
-        self.stanje = stanje
-        self.znak = znak
-        self.tip = None
-        self.lizraz = None
+import ulaz
+from Stablo import *
 
-    def __repr__(self):
-        return "Cvor(" + str(self.stanje) + ", " + self.znak + ")"
+korijen = ulaz.ulaz()
 
-class List(Cvor):
-    def __init__(self, stanje, ulazniZnak):
-        self.red = ulazniZnak.red
-        self.unif = ulazniZnak.unif
-        super().__init__(stanje, ulazniZnak.znak)
-    def __str__(self):
-        return self.znak + " " + self.red + " " + self.unif
-class ListEps(Cvor):
-    def __init__(self):
-        self.znak = "$"
-    def __str__(self):
-        return self.znak
 
-class UnutarnjiCvor(Cvor):
-    def __init__(self, stanje, znak, djeca):
-        self.djeca = djeca
-        super().__init__(stanje, znak)
+# def ispis_razine(cvorovi, n):
+#     for cvor in cvorovi:      
+#         for i in range(n):
+#             print(" ", end="")
+#         if(isinstance(cvor, List) or isinstance(cvor, ListEps)):
+#             print(cvor)
+            
+#         elif(isinstance(cvor, UnutarnjiCvor)):
+#             print(cvor.znak)
+#             ispis_razine(cvor.djeca, n + 1)
 
-class UlazniZnak:
-    def __init__(self, znak, red, unif):
-        self.znak = znak
-        self.red = red
-        self.unif = unif
-    def __repr__(self):
-        return "UlazniZnak(\'"+ self.znak + "\', " + self.red + ", " + self.unif + ")"
+# print(korijen.znak)
+# ispis_razine(korijen.djeca, 1)
+
