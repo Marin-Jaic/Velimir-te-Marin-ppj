@@ -13,7 +13,7 @@ class List(Cvor):
         self.vrijednost = vrijednost
         super().__init__(znak)
     def __str__(self):
-        return self.znak + " " + self.red + " " + self.vrijednost
+        return self.znak + "(" + self.red + ", " + self.vrijednost + ")"
 class ListEps(Cvor):
     def __init__(self):
         self.znak = "$"
