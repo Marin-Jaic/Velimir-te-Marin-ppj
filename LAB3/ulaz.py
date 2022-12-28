@@ -4,6 +4,8 @@ import sys
 
 def ulaz():
     ulaz = sys.stdin.read().split("\n")
+    #file = open("./LAB3/ulazi/ulaz.sem", "r")
+    #ulaz = file.readlines()
 
     def stvori_cvor(line_index, depth):
         #print(line_index + 1, depth)
