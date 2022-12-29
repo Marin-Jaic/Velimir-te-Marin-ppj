@@ -42,8 +42,6 @@ def jeX(str):
 def jeT(str):
     return str == "int" or str == "char"
 
-def jeCastInt(str):
-    return str == char
 
 
 def provjeri(cvor):
