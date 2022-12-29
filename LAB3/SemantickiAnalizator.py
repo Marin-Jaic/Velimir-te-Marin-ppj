@@ -414,7 +414,102 @@ def provjeri(cvor):
         else:
             print("POGREŠKA U <izraz>")
     
-    #TODO 4.4.5 Naredbena struktura programa
-    
+    #4.4.5 Naredbena struktura programa
+    elif(cvor.znak == "<slozena_naredba>"):
+        if(djeca[1].znak == "<lista_naredbi>"):
+            provjeri(djeca[1])
+        
+        elif(djeca[1].znak == "<lista_deklaracija>"):
+            provjeri(djeca[1])
+            provjeri(djeca[2])
 
+        else:
+            print("POGREŠKA U <slozena_naredba>")
     
+    elif(cvor.znak == "<lista_naredbi>"):
+        if(djeca[0].znak == "<naredba>"):
+            provjeri(djeca[0])
+
+        elif(djeca[1].znak == "<naredba>"):
+            provjeri(djeca[0])
+            provjeri(djeca[1])
+
+        else:
+            print("POGREŠKA U <lista_naredbi>")
+
+    #nesto <naredba> potencijalno zajebaje, str 63
+
+    elif(cvor.znak == "<izraz_naredba>"):
+        if(djeca[0].znak == "TOCKAZAREZ"):
+            cvor.tip = "int"
+
+        elif(djeca[0].znak == "<izraz>"):
+            cvor.tip = djeca[0].tip
+
+            provjeri(djeca[0])
+
+        else:
+            print("POGREŠKA U <izraz_naredba>")
+    
+    elif(cvor.znak == "<naredba_grananja>"):
+        if(len(djeca) == 5):
+            provjeri(djeca[2])
+            #TODO <izraz>.tip ∼ int
+            provjeri(djeca[4])
+        
+        elif(len(djeca) == 7):
+            provjeri(djeca[2])
+            #TODO <izraz>.tip ∼ int
+            provjeri(djeca[4])
+            provjeri(djeca[6])
+        
+        else:
+            print("POGREŠKA U <naredba_grananja>")
+        
+    elif(cvor.znak == "<naredba_petlje>"):
+        if(djeca[0].znak == "KR_WHILE"):
+            provjeri(djeca[2])
+            #TODO <izraz>.tip ∼ int
+            provjeri(djeca[4])
+        
+        elif(djeca[4] == "D_ZAGRADA"):
+            provjeri(djeca[2])
+            provjeri(djeca[3])
+            #TODO <izraz_naredba>2.tip ∼ int
+            provjeri(djeca[5])
+
+        elif(djeca[4] == "<izraz>"):
+            provjeri(djeca[2])
+            provjeri(djeca[3])
+            #TODO <izraz_naredba>2.tip ∼ int
+            provjeri(djeca[4])
+            provjeri(djeca[6])
+
+        else:
+            print("POGREŠKA U <naredba_petlje>")
+    
+    elif(cvor.znak == "<naredba_skoka>"):
+        if(djeca[0].znak == "KR_CONTINUE" or djeca[0].znak == "KR_BREAK"):
+            #TODO naredba se nalazi unutar petlje ili unutar bloka koji je ugnijeˇzden u petlji
+            gas = 0
+
+        elif(djeca[1].znak == "TOCKAZAREZ"):
+            #TODO 1. naredba se nalazi unutar funkcije tipa funkcija(params → void)
+            gas = 0
+
+        elif(djeca[1].znak == "<izraz>"):
+            provjeri(djeca[1])
+            #TODO naredba se nalazi unutar funkcije tipa funkcija(params → pov) i vrijedi <izraz>.tip ∼ pov
+        
+        else:
+            print("POGREŠKA U <naredba_skoka>")
+    
+    elif(cvor.znak == "<prijevodna_jedinica>"):
+        if(djeca[0].znak == "<vanjska_deklaracija>"):
+            provjeri(djeca[0])
+        
+        elif(djeca[0].znak == "<prijevodna_jedinica>"):
+            provjeri(djeca[0])
+            provjeri(djeca[1])
+    
+    #TODO 4.4.6 Deklaracije i definicije
