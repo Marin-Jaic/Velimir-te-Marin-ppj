@@ -3,6 +3,7 @@ class Cvor:
         self.znak = znak
         self.tip = None
         self.lizraz = None
+        self.tipovi = None
 
     def __repr__(self):
         return "Cvor(" + self.znak + ")"
