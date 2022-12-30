@@ -3,9 +3,9 @@ import sys
 
 
 def ulaz():
-    ulaz = sys.stdin.read().split("\n")
-    # file = open("./LAB3/ulazi/ulaz.sem", "r")
-    # ulaz = file.readlines()
+    # ulaz = sys.stdin.read().split("\n")
+    file = open("./LAB3/ulazi/ulaz.sem", "r")
+    ulaz = file.readlines()
 
     def stvori_cvor(line_index, depth):
         #print(line_index + 1, depth)
@@ -55,4 +55,4 @@ def ispis_razine(cvorovi, n):
             print(cvor.znak)
             ispis_razine(cvor.djeca, n + 1)
 
-#ispis_razine(ulaz().djeca, 1)
+ispis_razine(ulaz().djeca, 1)

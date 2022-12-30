@@ -33,6 +33,15 @@ def jeNizX(str):
 def jeNizT(str):
     return str[0:4] == "niz(" and str[len(str)-1] == ")" and jeT(str[4:(len(str)-1)])
 
+def jeNizConstX(str):
+    return str[0:4] == "niz(" and str[len(str)-1] == ")" and jeConstX(str[4:(len(str)-1)])
+
+def jeNizConstT(str):
+    return str[0:4] == "niz(" and str[len(str)-1] == ")" and jeConstT(str[4:(len(str)-1)])
+
+def jeConstX(str):
+    return str[0:6] == "const(" and str[len(str)-1] == ")" and jeX(str[6:(len(str)-1)])
+
 def jeConstT(str):
     return str[0:6] == "const(" and str[len(str)-1] == ")" and jeT(str[6:(len(str)-1)])
 
@@ -42,13 +51,15 @@ def jeX(str):
 def jeT(str):
     return str == "int" or str == "char"
 
+def ImplicitnoXToY(x, y): # Gleda vrijedi li x ~ y, nisam sto posto ako je tranzitivno okruzenje potpuno, cini mi se da je, ali mi špurijus govori da nije
+    #return x == y or jeT(x) and jeConstT(y) and x != "char" and y != int or jeConstT(x) and jeT(y) and x != "char" and y != int  or x == "char" and y == "int" or jeNizT(x) and jeNizConstT(y) and x != "char" and y != int
+    return (x == y or jeT(x) and jeConstT(y) or jeConstT(x) and jeT(y) or jeNizT(x) and jeNizConstT(y)) and x != "char" and y != int or x == "char" and y == "int"
 
 
 def provjeri(cvor):
     djeca = cvor.djeca
 
     if(cvor.znak == "<primarni_izraz>"):
-        #djeca = cvor.djeca MARIN PROMENA
 
         if(djeca[0].znak == "IDN"):
             #TODO provjera deklariranosti imena identifikatora u višezarinskoj tablici identifikatora 
@@ -207,7 +218,7 @@ def provjeri(cvor):
             cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
 
-        elif(djeca[1].znak == "<unarni_znak>"):
+        elif(djeca[1].znak == "<unarni_izraz>"):
             if not provjeri(djeca[1]):
                 return False
             
@@ -749,7 +760,197 @@ def provjeri(cvor):
                 return False
             if not provjeri(djeca[1]):
                 return False
+        
+        else:
+            print("POGREŠKA U <prijevodna_jedinica>")
+            return False
+
+    #TODO 4.4.6 Deklaracije i definicije
+    elif(cvor.znak == "<definicija_funkcije>"):
+        if(djeca[2].znak == "KR_VOID"):
+            if not provjeri(djeca[0]):
+                return False
+            if djeca[0].tip != "const(T)":
+                return False
+            #TODO ne postoji prije definirana funkcija imena IDN.ime
+            #TODO ako postoji deklaracija imena IDN.ime u globalnom djelokrugu onda je pripadni tip te deklaracije funkcija(void → <ime_tipa>.tip)
+            #TODO zabiljeˇzi definiciju i deklaraciju funkcije
+            provjeri(djeca[5])
+        
+        elif(djeca[2].znak == "<lista_parametara>"):
+            if not provjeri(djeca[0]):
+                return False
+            if djeca[0].tip != "const(T)":
+                return False
+            #TODO ne postoji prije definirana funkcija imena IDN.ime
+            if not provjeri(djeca[2]):
+                return False
+            #TODO ako postoji deklaracija imena IDN.ime u globalnom djelokrugu onda je pripadni tip te deklaracije funkcija(void → <ime_tipa>.tip)
+            #TODO zabiljeˇzi definiciju i deklaraciju funkcije
+            provjeri(djeca[5])
+            #TODO provjeri(<slozena_naredba>) uz parametre funkcije koriste´ci <lista_parametara>.tipovi i <lista_parametara>.imena.
+
+        else:
+            print("POGREŠKA U <prijevodna_jedinica>")
+            return False
+        
+    elif(cvor.znak == "<lista_parametara>"):
+        if(djeca[0].znak  == "<deklaracija_parametra>"):
+            if not provjeri(djeca[0]):
+                return False
+            #TODO tipovi ← [ <deklaracija_parametra>.tip ]
+            #TODO imena ← [ <deklaracija_parametra>.ime ]
+        
+        elif(djeca[0].znak == "<lista_parametara>"):
+            if not provjeri(djeca[0]):
+                return False
+            if not provjeri(djeca[2]):
+                return False
+            #TODO tipovi ← <lista_parametara>.tipovi + [ <deklaracija_parametra>.tip ]
+            #TODO imena ← <lista_parametara>.imena + [ <deklaracija_parametra>.ime ]
+
+        else:
+            print("POGREŠKA U <lista_parametara>")
+            return False
+    
+    elif(cvor.znak == "<deklaracija_parametra>"):
+        if(len(djeca) == 2):
+            if not provjeri(djeca[0]):
+                return False
+            if djeca[0].tip == "void":
+                return False
+            
+            cvor.tip = djeca[0].tip
+            #TODO ime ← IDN.ime
+        
+        elif(len(djeca) == 4):
+            if not provjeri(djeca[0]):
+                return False
+            if djeca[0].tip == "void":
+                return False
+            
+            cvor.tip = "niz(" + djeca[0].tip + ")"
+            #TODO ime ← IDN.ime
+        
+        else:
+            print("POGREŠKA U <deklaracija_parametra>")
+            return False
+    
+    elif(cvor.znak == "<lista_deklaracija>"):
+        if(djeca[0].znak == "<deklaracija>"):
+            if not provjeri(djeca[0]): 
+                return False
+        
+        elif(djeca[1].znak == "<deklaracija>"):
+            if not provjeri(djeca[0]):
+                return False
+            if not provjeri(djeca[1]):
+                return False
+
+        else:
+            print("POGREŠKA U <lista_deklaracija>")
+            return False
+
+    elif(cvor.znak == "<deklaracija>"):
+        if(djeca[0].znak == "<ime_tipa>"):
+            if not provjeri(djeca[0]): 
+                return False      
+            #TODO provjeri(<lista_init_deklaratora>) uz nasljedno svojstvo <lista_init_deklaratora>.ntip ← <ime_tipa>.tip
+
+            # Specifiˇcnost toˇcke 2 je nasljedno svojstvo ntip nezavrˇsnog znaka <lista_init_deklaratora>.
+            # Svojstvo ntip sluˇzi za prijenos jednog dijela informacije o tipu u sve deklaratore. Za varijable brojevnog 
+            # tipa ntip ´ce biti cijeli tip, za nizove ´ce biti tip elementa niza, a za funkcije ´ce biti povratni tip.
+        
+        else:
+            print("POGREŠKA U <deklaracija>")
+            return False
+
+    elif(cvor.znak == "<lista_init_deklaratora>"):
+        if(djeca[0].znak == "<init_deklarator>"):
+            #TODO provjeri(<init_deklarator>) uz nasljedno svojstvo <<init_deklarator>>.ntip ← <lista_init_deklaratora>.tip
+            gas = 0
+
+        elif(djeca[0].znak == "<init_deklarator>"): #cudno je numerirano nesto u ovoj produkciji str 68 pa samo ostavljam natuknicu
+            #TODO provjeri(<lista_init_deklaratora>2) uz nasljedno svojstvo <lista_init_deklaratora>2.ntip ← <lista_init_deklaratora>1.ntip
+            #TODO provjeri(<init_deklarator>) uz nasljedno svojstvo <init_deklarator>.ntip ← <lista_init_deklaratora>1.ntip
+            gas = 0
+        
+        else:
+            print("POGREŠKA U <lista_init_deklaratora>")
+            return False
+    
+    elif(cvor.znak == "<init_deklarator>"):
+        if(len(djeca) == 1):
+            #TODO provjeri(<izravni_deklarator>) uz nasljedno svojstvo <izravni_deklarator>.ntip ← <init_deklarator>.ntip
+            if jeConstT(djeca[0].tip) or jeNizConstT(djeca[0].tip):
+                return False
+    
+        elif(len(djeca) == 3):
+            #TODO provjeri(<izravni_deklarator>) uz nasljedno svojstvo <izravni_deklarator>.ntip ← <init_deklarator>.ntip
+            if not provjeri(djeca[2]):
+                return False
+
+            if jeT(djeca[0].tip) or jeConstT(djeca[0].tip):
+                #TODO <inicijalizator>.tip ∼ T
+                gas = 0
+            elif jeNizT(djeca[0].tip) or jeNizConstT(djeca[0].tip):
+                #TODO <inicijalizator>.br-elem ≤ <izravni_deklarator>.br-elem za svaki U iz <inicijalizator>.tipovi vrijedi U ∼ T
+                gas = 0
+            else:
+                return False 
+        
+        else:
+            print("POGREŠKA U <init_deklarator>")
+            return False
+    
+    elif(cvor.znak == "<izravni_deklarator>"):
+        if(len(djeca) == 1):
+            #TODO ntip != void
+            #TODO IDN.ime nije deklarirano u lokalnom djelokrugu
+            #TODO zabiljeˇzi deklaraciju IDN.ime s odgovaraju´cim tipom
+
+            #TODO tip ← ntip
+            gas = 0
+
+        elif(djeca[2].znak == "BROJ"):
+            #TODO ntip != void
+            #TODO IDN.ime nije deklarirano u lokalnom djelokrugu
+            #TODO zabiljeˇzi deklaraciju IDN.ime s odgovaraju´cim tipom
+
+            #TODO tip ← ntip
+            #TODO br-elem ← BROJ.vrijednost
+            gas = 0
+
+        elif(djeca[2].znak == "KR_VOID"):
+            #TODO ako je IDN.ime deklarirano u lokalnom djelokrugu, tip prethodne deklaracije je jednak funkcija(void → ntip)
+            #TODO zabiljeˇzi deklaraciju IDN.ime s odgovaraju´cim tipom ako ista funkcija ve´c nije deklarirana u lokalnom djelokrugu
+
+            #TODO tip ← funkcija(void → ntip)
+            gas = 0
+        
+        elif(djeca[2].znak == "<lista_parametara>"):
+            if not provjeri(djeca[3]):
+                return False
+            #TODO ako je IDN.ime deklarirano u lokalnom djelokrugu, tip prethodne deklaracije je jednak funkcija(<lista_parametara>.tipovi → ntip)
+            #TODO zabiljeˇzi deklaraciju IDN.ime s odgovaraju´cim tipom ako ista funkcija ve´c nije deklarirana u lokalnom djelokrugu
+
+            #TODO tip ← funkcija(<lista_parametara>.tipovi → ntip)
+
+        else:
+            print("POGREŠKA U <izravni_deklarator>")
+            return False
+    
+    elif(cvor.znak == "<izravni_deklarator>"):
+        if not provjeri(djeca[0]):
+            return False
+
+        #TODO ako je <izraz_pridruzivanja> ∗⇒ NIZ_ZNAKOVA:
+            # br-elem ← duljina niza znakova + 1
+            # tipovi ← lista duljine br-elem, svi elementi su char
+        else:
+            cvor.tip = djeca[0].tip
 
     return True
     
-    #TODO 4.4.6 Deklaracije i definicije
+    
+
