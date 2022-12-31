@@ -3,7 +3,7 @@ from Stablo import *
 
 korijen = ulaz.ulaz()
 
-def jebroj(broj):
+def jebroj(broj, tablica_IDN, tablica_func):
     if not broj.isdigit():
         return False
     broj = int(broj)
@@ -770,12 +770,14 @@ def provjeri(cvor):
         if(djeca[2].znak == "KR_VOID"):
             if not provjeri(djeca[0]):
                 return False
-            if djeca[0].tip != "const(T)":
+            if not jeConstT(djeca[0].tip):
+                print("<definicija_funkcije> ::= <ime_tipa> "+djeca[1]+" "+djeca[2]+" "+djeca[3]+" "+djeca[4]+" <slozena_naredba>")
                 return False
             #TODO ne postoji prije definirana funkcija imena IDN.ime
             #TODO ako postoji deklaracija imena IDN.ime u globalnom djelokrugu onda je pripadni tip te deklaracije funkcija(void → <ime_tipa>.tip)
             #TODO zabiljeˇzi definiciju i deklaraciju funkcije
-            provjeri(djeca[5])
+            if not provjeri(djeca[5]):
+                return False
         
         elif(djeca[2].znak == "<lista_parametara>"):
             if not provjeri(djeca[0]):

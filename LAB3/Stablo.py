@@ -6,6 +6,9 @@ class Cvor:
         self.tipovi = None
         self.ime = None #Marin dodavanje
         self.imena = None #Marin dodavanje
+        self.pov = None
+        self.params = None
+        self.ntip = None
 
     def __repr__(self):
         return "Cvor(" + self.znak + ")"
@@ -30,3 +33,6 @@ class UnutarnjiCvor(Cvor):
     def __init__(self, znak, djeca):
         self.djeca = djeca
         super().__init__(znak)
+
+
+
