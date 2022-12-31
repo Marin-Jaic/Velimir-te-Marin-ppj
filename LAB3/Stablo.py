@@ -6,8 +6,6 @@ class Cvor:
         self.tipovi = None
         self.ime = None #Marin dodavanje
         self.imena = None #Marin dodavanje
-        self.pov = None
-        self.params = None
         self.ntip = None
 
     def __repr__(self):
@@ -36,3 +34,8 @@ class UnutarnjiCvor(Cvor):
 
 
 
+class Funkcija:
+    def __init__(self, params, pov, definirana=False):
+        self.params = params
+        self.pov = pov
+        self.definirana = definirana

@@ -3,7 +3,10 @@ from Stablo import *
 
 korijen = ulaz.ulaz()
 
-def jebroj(broj, tablica_IDN, tablica_func):
+#provjeri(korijen, dict())
+
+
+def jebroj(broj):
     if not broj.isdigit():
         return False
     broj = int(broj)
@@ -39,8 +42,10 @@ def jeNizConstX(str):
 def jeNizConstT(str):
     return str[0:4] == "niz(" and str[len(str)-1] == ")" and jeConstT(str[4:(len(str)-1)])
 
+# Ovo je suvisno
 def jeConstX(str):
     return str[0:6] == "const(" and str[len(str)-1] == ")" and jeX(str[6:(len(str)-1)])
+#---------------
 
 def jeConstT(str):
     return str[0:6] == "const(" and str[len(str)-1] == ")" and jeT(str[6:(len(str)-1)])
@@ -55,17 +60,29 @@ def ImplicitnoXToY(x, y): # Gleda vrijedi li x ~ y, nisam sto posto ako je tranz
     #return x == y or jeT(x) and jeConstT(y) and x != "char" and y != int or jeConstT(x) and jeT(y) and x != "char" and y != int  or x == "char" and y == "int" or jeNizT(x) and jeNizConstT(y) and x != "char" and y != int
     return (x == y or jeT(x) and jeConstT(y) or jeConstT(x) and jeT(y) or jeNizT(x) and jeNizConstT(y)) and x != "char" and y != int or x == "char" and y == "int"
 
+def EksplicitnoXToY(x, y):
+    return jeX(x) and jeT(y)
 
-def provjeri(cvor):
+
+
+
+def provjeri(cvor, tablica_IDN):
     djeca = cvor.djeca
 
     if(cvor.znak == "<primarni_izraz>"):
 
         if(djeca[0].znak == "IDN"):
-            #TODO provjera deklariranosti imena identifikatora u višezarinskoj tablici identifikatora 
 
-            cvor.tip = djeca[0].tip
-            cvor.lizraz = djeca[0].izraz
+            if tablica_IDN[djeca[0].vrijednost] == None:
+                print("<primarni_izraz> ::= " + str(djeca[0]))
+                return False
+            
+            tip = tablica_IDN[djeca[0].vrijednost]
+            # tip će biti ili string "int", "char" i tako
+            # ili tuple oblika (params, pov) ("void", "void"), (["int", "int"], "char") i tako
+
+            cvor.tip = tip
+            cvor.lizraz = not isinstance(tip, Funkcija) and jeT(tip) 
 
 
         elif(djeca[0].znak == "BROJ"):
@@ -143,28 +160,31 @@ def provjeri(cvor):
             if not provjeri(djeca[0]):
                 return False
 
-            if djeca[0].tip != "funkcija(void->pov)":
+            if not (isinstance(djeca[0].tip, Funkcija) and djeca[0].tip.params == "void"):
                 print("<postfiks_izraz> ::= <postfiks_izraz> " + str(djeca[1]) + " " + str(djeca[2]))
+                return False
 
-            cvor.tip = "pov" #pov je povratno valjda ne znam
+            cvor.tip = djeca[0].tip.pov
             cvor.lizraz = False
 
 
         elif(djeca[2].znak == "<lista_argumenata>"):
-
-
             if not provjeri(djeca[0]):
                 return False
             
             if not provjeri(djeca[2]):
                 return False
             
-            if djeca[0].tip != "funckija(params->pov)":
+            if not (isinstance(djeca[0].tip, Funkcija) and isinstance(djeca[0].tip.params, list) and len(djeca[0].tip.params) == len(djeca[2].tipovi)):
                 print("<postfiks_izraz> ::= <postfiks_izraz> " + str(djeca[1]) + " <lista_argumenata> " + str(djeca[3]))
                 return False
-            #TODO params treba promijenit u tipove iz liste argumenata 
 
-            cvor.tip = "pov"
+            for i in range(len(djeca[2].tipovi)):
+                if not ImplicitnoXToY(djeca[0].tip.params[i], djeca[2].tipovi[i]):
+                    print("<postfiks_izraz> ::= <postfiks_izraz> " + str(djeca[1]) + " <lista_argumenata> " + str(djeca[3]))
+                    return False
+
+            cvor.tip = djeca[0].tip.pov
             cvor.lizraz = False
 
 
@@ -193,8 +213,6 @@ def provjeri(cvor):
             
 
         elif(djeca[0].znak == "<lista_argumenata>"):
-            #TODO  tipovi ← [ <izraz_pridruzivanja>.tip ]
-
             if not provjeri(djeca[0]):
                 return False
             
@@ -260,11 +278,13 @@ def provjeri(cvor):
                 return False
             if not provjeri(djeca[3]):
                 return False
-            #TODO <cast_izraz>.tip se moˇze pretvoriti u <ime_tipa>.tip 
+            
+            if not EksplicitnoXToY(djeca[3].tip, djeca[1].tip):
+                print("<cast_izraz> ::= "+str(djeca[0])+" <ime_tipa> "+str(djeca[2])+" <cast_izraz>")
+                return False
 
             cvor.tip = djeca[1].tip
             cvor.lizraz = False
-
 
         else: 
             print("POGREŠKA U <cast_izraz>")
@@ -583,10 +603,14 @@ def provjeri(cvor):
         elif(djeca[0].znak == "<postfiks_izraz>"):
             if not provjeri(djeca[0]):
                 return False
-            djeca[0].lizraz = 1
+            if not djeca[0].lizraz:
+                print("<izraz_pridruzivanja> ::= <postfiks_izraz> "+str(djeca[1])+" <izraz_pridruzivanja>")
+                return False
             if not provjeri(djeca[2]):
                 return False
-            #TODO  <izraz_pridruzivanja>.tip ∼ <postfiks_izraz>.tip
+            if not ImplicitnoXToY(djeca[2].tip, djeca[0].tip):
+                print("<izraz_pridruzivanja> ::= <postfiks_izraz> "+str(djeca[1])+" <izraz_pridruzivanja>")
+                return False
             
             cvor.tip = djeca[0].tip
             cvor.lizraz = False
@@ -773,9 +797,18 @@ def provjeri(cvor):
             if not jeConstT(djeca[0].tip):
                 print("<definicija_funkcije> ::= <ime_tipa> "+djeca[1]+" "+djeca[2]+" "+djeca[3]+" "+djeca[4]+" <slozena_naredba>")
                 return False
-            #TODO ne postoji prije definirana funkcija imena IDN.ime
-            #TODO ako postoji deklaracija imena IDN.ime u globalnom djelokrugu onda je pripadni tip te deklaracije funkcija(void → <ime_tipa>.tip)
-            #TODO zabiljeˇzi definiciju i deklaraciju funkcije
+            if (tablica_IDN[djeca[1].vrijednost] != None and isinstance(tablica_IDN[djeca[1].vrijednost], Funkcija) and tablica_IDN[djeca[1].vrijednost].definirana):
+                print("<definicija_funkcije> ::= <ime_tipa> "+djeca[1]+" "+djeca[2]+" "+djeca[3]+" "+djeca[4]+" <slozena_naredba>")
+                return False  
+            if not (tablica_IDN[djeca[1].vrijednost] != None and isinstance(tablica_IDN[djeca[1].vrijednost], Funkcija) and tablica_IDN[djeca[1].vrijednost].params == "void" and tablica_IDN[djeca[1].vrijednost].pov == djeca[0].tip):
+                print("<definicija_funkcije> ::= <ime_tipa> "+djeca[1]+" "+djeca[2]+" "+djeca[3]+" "+djeca[4]+" <slozena_naredba>")
+                return False  
+            
+            if tablica_IDN[djeca[1].vrijednost] == None:
+                tablica_IDN[djeca[1].vrijednost] = Funkcija("void", djeca[0].tip, True)
+            else:
+                tablica_IDN[djeca[1].vrijednost].definirana = True
+            
             if not provjeri(djeca[5]):
                 return False
         
