@@ -1,5 +1,6 @@
 import ulaz
 from Stablo import *
+import copy
 
 korijen = ulaz.ulaz()
 
@@ -759,11 +760,11 @@ def provjeri(cvor, tablica_IDN):
     elif(cvor.znak == "<naredba_skoka>"):
         if(djeca[0].znak == "KR_CONTINUE" or djeca[0].znak == "KR_BREAK"):
             #TODO naredba se nalazi unutar petlje ili unutar bloka koji je ugnijeˇzden u petlji
-            gas = 0
+            pass
 
         elif(djeca[1].znak == "TOCKAZAREZ"):
             #TODO 1. naredba se nalazi unutar funkcije tipa funkcija(params → void)
-            gas = 0
+            pass
 
         elif(djeca[1].znak == "<izraz>"):
             if not provjeri(djeca[1]):
@@ -791,7 +792,7 @@ def provjeri(cvor, tablica_IDN):
 
     #TODO 4.4.6 Deklaracije i definicije
     elif(cvor.znak == "<definicija_funkcije>"):
-        if(djeca[2].znak == "KR_VOID"):
+        if(djeca[3].znak == "KR_VOID"):
             if not provjeri(djeca[0]):
                 return False
             if not jeConstT(djeca[0].tip):
@@ -812,18 +813,33 @@ def provjeri(cvor, tablica_IDN):
             if not provjeri(djeca[5]):
                 return False
         
-        elif(djeca[2].znak == "<lista_parametara>"):
+        elif(djeca[3].znak == "<lista_parametara>"):
             if not provjeri(djeca[0]):
                 return False
-            if djeca[0].tip != "const(T)":
+            if not jeConstT(djeca[0].tip):
+                print("<definicija_funkcije> ::= <ime_tipa> "+str(djeca[1])+" "+str(djeca[2])+" <lista_parametara> "+str(djeca[4])+" <slozena_naredba>")
                 return False
-            #TODO ne postoji prije definirana funkcija imena IDN.ime
+            if (tablica_IDN[djeca[1].vrijednost] != None and isinstance(tablica_IDN[djeca[1].vrijednost], Funkcija) and tablica_IDN[djeca[1].vrijednost].definirana):
+                print("<definicija_funkcije> ::= <ime_tipa> "+djeca[1]+" "+djeca[2]+" "+djeca[3]+" "+djeca[4]+" <slozena_naredba>")
+                return False  
             if not provjeri(djeca[2]):
                 return False
-            #TODO ako postoji deklaracija imena IDN.ime u globalnom djelokrugu onda je pripadni tip te deklaracije funkcija(void → <ime_tipa>.tip)
-            #TODO zabiljeˇzi definiciju i deklaraciju funkcije
-            provjeri(djeca[5])
-            #TODO provjeri(<slozena_naredba>) uz parametre funkcije koriste´ci <lista_parametara>.tipovi i <lista_parametara>.imena.
+            if not (tablica_IDN[djeca[1].vrijednost] != None and isinstance(tablica_IDN[djeca[1].vrijednost], Funkcija) and tablica_IDN[djeca[1].vrijednost].params == djeca[3].tipovi and tablica_IDN[djeca[1].vrijednost].pov == djeca[0].tip):
+                print("<definicija_funkcije> ::= <ime_tipa> "+djeca[1]+" "+djeca[2]+" "+djeca[3]+" "+djeca[4]+" <slozena_naredba>")
+                return False  
+            
+            if tablica_IDN[djeca[1].vrijednost] == None:
+                tablica_IDN[djeca[1].vrijednost] = Funkcija("void", djeca[0].tip, True)
+            else:
+                tablica_IDN[djeca[1].vrijednost].definirana = True
+            
+            nova_tablica = copy.deepcopy(tablica_IDN)
+            for i in range(len(djeca[3].tipovi)):
+                nova_tablica[djeca[3].imena[i]] = djeca[3].tipovi[i]
+
+            if not provjeri(djeca[5], nova_tablica):
+                return False
+            
 
         else:
             print("POGREŠKA U <prijevodna_jedinica>")
@@ -833,16 +849,20 @@ def provjeri(cvor, tablica_IDN):
         if(djeca[0].znak  == "<deklaracija_parametra>"):
             if not provjeri(djeca[0]):
                 return False
-            #TODO tipovi ← [ <deklaracija_parametra>.tip ]
-            #TODO imena ← [ <deklaracija_parametra>.ime ]
+            cvor.tipovi = [ djeca[0].tip ]
+            cvor.tipovi = [ djeca[0].ime ]
         
         elif(djeca[0].znak == "<lista_parametara>"):
             if not provjeri(djeca[0]):
                 return False
             if not provjeri(djeca[2]):
                 return False
-            #TODO tipovi ← <lista_parametara>.tipovi + [ <deklaracija_parametra>.tip ]
-            #TODO imena ← <lista_parametara>.imena + [ <deklaracija_parametra>.ime ]
+            if djeca[2].ime in djeca[0].imena:
+                print("<lista_parametara> ::= <lista_parametara> "+str(djeca[1])+" <deklaracija_parametra>")
+                return False
+
+            cvor.tipovi = djeca[0].tipovi + [ djeca[2].tip ]
+            cvor.imena = djeca[0].imena + [ djeca[2].ime ]
 
         else:
             print("POGREŠKA U <lista_parametara>")
@@ -853,19 +873,21 @@ def provjeri(cvor, tablica_IDN):
             if not provjeri(djeca[0]):
                 return False
             if djeca[0].tip == "void":
+                print("<deklaracija_parametra> ::= <ime_tipa> " +str(djeca[1]))
                 return False
             
             cvor.tip = djeca[0].tip
-            #TODO ime ← IDN.ime
+            cvor.ime = djeca[1].vrijednost
         
         elif(len(djeca) == 4):
             if not provjeri(djeca[0]):
                 return False
             if djeca[0].tip == "void":
+                print("<deklaracija_parametra> ::= <ime_tipa> "+str(djeca[1])+" "+str(djeca[2])+" "+str(djeca[3]))
                 return False
             
             cvor.tip = "niz(" + djeca[0].tip + ")"
-            #TODO ime ← IDN.ime
+            cvor.ime = djeca[1].vrijednost
         
         else:
             print("POGREŠKA U <deklaracija_parametra>")
