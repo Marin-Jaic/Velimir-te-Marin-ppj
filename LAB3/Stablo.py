@@ -40,3 +40,16 @@ class Funkcija:
         self.params = params
         self.pov = pov
         self.definirana = definirana
+
+class tablicaPodatak:
+    def __init__(self, tip, djelokrug):
+        self.tip = tip
+        self.djelokrug = djelokrug
+
+class djelokrugPodatak:
+    def __init__(self, vrsta, dubina):
+        self.vrsta = vrsta
+        self.dubina = dubina
+    
+    def __eq__(self, other):
+        return self.vrsta == other.vrsta and self.dubina == other.dubina
