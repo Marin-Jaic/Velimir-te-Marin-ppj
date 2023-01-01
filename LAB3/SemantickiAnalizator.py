@@ -4,7 +4,6 @@ import copy
 
 korijen = ulaz.ulaz()
 
-#provjeri(korijen, dict())
 
 
 def jebroj(broj):
@@ -130,7 +129,8 @@ def provjeri(cvor, tablica_IDN):
 
             cvor.tip = "niz(const(char))"
             cvor.lizraz = False
-
+            cvor.brelem = len(djeca[0].vrijednost) - 2
+            #Nadopuniti sve izraze koji generiraju NIZ_ZNAKOVA sa brelem!!!!!!!!
 
 
         elif(djeca[0].znak == "L_ZAGRADA"):
@@ -153,7 +153,7 @@ def provjeri(cvor, tablica_IDN):
 
             cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
-
+            cvor.brelem = djeca[0].brelem
         
         elif(djeca[2].znak == "<izraz>"):
             if not provjeri(djeca[0]):
@@ -253,6 +253,7 @@ def provjeri(cvor, tablica_IDN):
 
             cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
+            cvor.brelem = djeca[0].brelem
 
         elif(djeca[1].znak == "<unarni_izraz>"):
             if not provjeri(djeca[1]):
@@ -289,6 +290,7 @@ def provjeri(cvor, tablica_IDN):
 
             cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
+            cvor.brelem = djeca[0].brelem
 
         
         elif(djeca[0].znak == "L_ZAGRADA"):
@@ -357,6 +359,8 @@ def provjeri(cvor, tablica_IDN):
 
             cvor.tip = "void"
             cvor.lizraz = djeca[0].lizraz
+            cvor.brelem = djeca[0].brelem
+
 
         
         elif(djeca[0].znak == "<multiplikativni_izraz>"):
@@ -388,7 +392,7 @@ def provjeri(cvor, tablica_IDN):
             
             cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
-
+            cvor.brelem = djeca[0].brelem
         
         elif(djeca[0].znak == "<aditivni_izraz>"):
             cvor.tip = "int"
@@ -416,7 +420,7 @@ def provjeri(cvor, tablica_IDN):
             
             cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
-        
+            cvor.brelem = djeca[0].brelem
 
         elif(djeca[0].znak == "<odnosni_izraz>"):
             cvor.tip = "int"
@@ -446,7 +450,7 @@ def provjeri(cvor, tablica_IDN):
             
             cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
-                
+            cvor.brelem = djeca[0].brelem    
         
         elif(djeca[0].znak == "<jednakosni_izraz>"):   
             if not provjeri(djeca[0]):
@@ -476,7 +480,7 @@ def provjeri(cvor, tablica_IDN):
             
             cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
-
+            cvor.brelem = djeca[0].brelem
         
         elif(djeca[0].znak == "<bin_i_izraz>"):
             cvor.tip = "int"
@@ -505,7 +509,8 @@ def provjeri(cvor, tablica_IDN):
             
             cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
-        
+            cvor.brelem = djeca[0].brelem
+
         elif(djeca[0].znak == "<bin_xili_izraz>"):
             if not provjeri(djeca[0]):
                 return False
@@ -532,6 +537,7 @@ def provjeri(cvor, tablica_IDN):
             
             cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
+            cvor.brelem = djeca[0].brelem
         
         elif(djeca[0].znak == "<bin_ili_izraz>"):
             if not provjeri(djeca[0]):
@@ -559,7 +565,7 @@ def provjeri(cvor, tablica_IDN):
 
             cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
-        
+            cvor.brelem = djeca[0].brelem
 
         elif(djeca[0].znak == "<log_i_izraz>"):
             if not provjeri(djeca[0]):
@@ -588,7 +594,7 @@ def provjeri(cvor, tablica_IDN):
             
             cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
-
+            cvor.brelem = djeca[0].brelem
         
         elif(djeca[0].znak == "<log_ili_izraz>"):
             if not provjeri(djeca[0]):
@@ -616,7 +622,7 @@ def provjeri(cvor, tablica_IDN):
             
             cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
-
+            cvor.brelem = djeca[0].brelem
 
         elif(djeca[0].znak == "<postfiks_izraz>"):
             if not provjeri(djeca[0]):
@@ -662,13 +668,14 @@ def provjeri(cvor, tablica_IDN):
     #4.4.5 Naredbena struktura programa
     elif(cvor.znak == "<slozena_naredba>"):
         if(djeca[1].znak == "<lista_naredbi>"):
-            if not provjeri(djeca[1]):
+            if not provjeri(djeca[1], copy.deepcopy(tablica_IDN)):
                 return False
         
         elif(djeca[1].znak == "<lista_deklaracija>"):
-            if not provjeri(djeca[1]):
+            nova_tablica = copy.deepcopy(tablica_IDN)
+            if not provjeri(djeca[1], nova_tablica):
                 return False
-            if not provjeri(djeca[2]):
+            if not provjeri(djeca[2], nova_tablica):
                 return False
 
         else:
@@ -680,7 +687,7 @@ def provjeri(cvor, tablica_IDN):
             if not provjeri(djeca[0]):
                 return False
 
-        elif(djeca[1].znak == "<naredba>"):
+        elif(djeca[0].znak == "<lista_naredbi>"):
             if not provjeri(djeca[0]):
                 return False
             if not provjeri(djeca[1]):
@@ -690,17 +697,23 @@ def provjeri(cvor, tablica_IDN):
             print("POGREŠKA U <lista_naredbi>")
             return False
 
-    #nesto <naredba> potencijalno zajebaje, str 63
+    elif(cvor.znak == "<naredba>"):
+        if djeca[0].znak == "<slozena_naredba>":
+            if not provjeri(djeca[0], copy.deepcopy(tablica_IDN)):
+                return False
+        else:
+            if not provjeri(djeca[0]):
+                return False
 
     elif(cvor.znak == "<izraz_naredba>"):
         if(djeca[0].znak == "TOCKAZAREZ"):
             cvor.tip = "int"
 
         elif(djeca[0].znak == "<izraz>"):
-            cvor.tip = djeca[0].tip
-
             if not provjeri(djeca[0]):
                 return False
+
+            cvor.tip = djeca[0].tip
 
         else:
             print("POGREŠKA U <izraz_naredba>")
@@ -807,6 +820,11 @@ def provjeri(cvor, tablica_IDN):
             print("POGREŠKA U <prijevodna_jedinica>")
             return False
 
+    elif(cvor.znak == "<vanjska_deklaracija>"):
+        if not provjeri(djeca[0]):
+            return False
+
+
     #TODO 4.4.6 Deklaracije i definicije
     elif(cvor.znak == "<definicija_funkcije>"):
         if(djeca[3].znak == "KR_VOID"):
@@ -827,7 +845,7 @@ def provjeri(cvor, tablica_IDN):
             else:
                 tablica_IDN[djeca[1].vrijednost].definirana = True
             
-            if not provjeri(djeca[5]):
+            if not provjeri(djeca[5], copy.deepcopy(tablica_IDN)):
                 return False
         
         elif(djeca[3].znak == "<lista_parametara>"):
@@ -850,11 +868,11 @@ def provjeri(cvor, tablica_IDN):
             else:
                 tablica_IDN[djeca[1].vrijednost].definirana = True
             
-            #nova_tablica = copy.deepcopy(tablica_IDN) to ne radimo ovdje nego prije ulaska u dublji djelokrug
+            nova_tablica = copy.deepcopy(tablica_IDN) 
             for i in range(len(djeca[3].tipovi)):
-                tablica_IDN[djeca[3].imena[i]] = djeca[3].tipovi[i]
+                nova_tablica[djeca[3].imena[i]] = djeca[3].tipovi[i]
 
-            if not provjeri(djeca[5], tablica_IDN):
+            if not provjeri(djeca[5], nova_tablica):
                 return False
             
 
@@ -1056,16 +1074,47 @@ def provjeri(cvor, tablica_IDN):
             return False
     
     elif(cvor.znak == "<inicijalizator>"):
-        if not provjeri(djeca[0]):
-            return False
+        if(djeca[0].znak == "<izraz_pridruzivanja>"):
+            if not provjeri(djeca[0]):
+                return False
 
-        #TODO ako je <izraz_pridruzivanja> ∗⇒ NIZ_ZNAKOVA:
-            # br-elem ← duljina niza znakova + 1
-            # tipovi ← lista duljine br-elem, svi elementi su char
+            #---Nisam siguran za ovo---
+            if djeca[0].tip == "niz(const(char))":
+                cvor.brelem = djeca[0].brelem + 1 
+                cvor.tipovi = ["char" for i in range(len(cvor.brelem))]
+            else:
+                cvor.tip = djeca[0].tip
+        
+        elif(djeca[0].znak == "L_VIT_ZAGRADA"):
+            if not provjeri(djeca[1]):
+                return False
+            
+            cvor.brelem = djeca[1].brelem
+            cvor.tipovi = djeca[1].tipovi
+        
         else:
-            cvor.tip = djeca[0].tip
-
+            print("POGREŠKA U <inicijalizator>")
+            return False
+    elif(cvor.znak == "<lista_izraza_pridruzivanja>"):
+        if(djeca[0].znak == "<izraz_pridruzivanja>"):
+            if not provjeri(djeca[0]):
+                return False
+            cvor.tipovi = [djeca[0].tip]
+            cvor.brelem = 1
+        
+        elif(djeca[0].znak == "<lista_izraza_pridruzivanja>"):
+            if not provjeri(djeca[0]):
+                return False
+            if not provjeri(djeca[2]):
+                return False
+            cvor.tipovi = djeca[0].tipovi + [djeca[2].tip]
+            cvor.brelem = djeca[0].brelem + 1         
+        else:
+            print("POGREŠKA U <lista_izraza_pridruzivanja>")
+    else:
+        print("NIJE PRONAĐENA PRODUKCIJA ZA: "+ str(cvor)) 
     return True
     
     
-
+#golablni_djelokrug = dict()
+#provjeri(korijen, golablni_djelokrug, ["global"])

@@ -1,11 +1,2 @@
-int f1(char a, char b) {
-    return a == b;
-}
-
-void f2(int x) {
-    return;
-}
-
-void f3(void) {
-    return;
-}
+char a[10] = "abc"; // isto kao redak 2
+const char c[10] = "a";
