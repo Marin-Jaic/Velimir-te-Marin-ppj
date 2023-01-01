@@ -83,7 +83,7 @@ def EksplicitnoXToY(x, y):
 
 
 
-def provjeri(cvor, tablica_IDN):
+def provjeri(cvor, tablica_IDN, djelokrug):
     djeca = cvor.djeca
 
     if(cvor.znak == "<primarni_izraz>"):
@@ -130,6 +130,9 @@ def provjeri(cvor, tablica_IDN):
             cvor.tip = "niz(const(char))"
             cvor.lizraz = False
             cvor.brelem = len(djeca[0].vrijednost) - 2
+            
+            
+            
             #Nadopuniti sve izraze koji generiraju NIZ_ZNAKOVA sa brelem!!!!!!!!
 
 
@@ -698,7 +701,7 @@ def provjeri(cvor, tablica_IDN):
             return False
 
     elif(cvor.znak == "<naredba>"):
-        if djeca[0].znak == "<slozena_naredba>":
+        if djeca[0].znak == "<slozena_naredba>" or djeca[0].znak == "<naredba_petlje>":
             if not provjeri(djeca[0], copy.deepcopy(tablica_IDN)):
                 return False
         else:
@@ -756,7 +759,7 @@ def provjeri(cvor, tablica_IDN):
             if not jeX(djeca[2].tip):
                 print("<naredba_petlje> ::= "+str(djeca[0])+" "+str(djeca[1])+" <izraz> "+str(djeca[3])+" <naredba>")
                 return False
-            if not provjeri(djeca[4]):
+            if not provjeri(djeca[4], tablica_IDN, djelokrug[:] + ["PETLJA"]):
                 return False
         
         elif(djeca[4] == "D_ZAGRADA"):
@@ -767,7 +770,7 @@ def provjeri(cvor, tablica_IDN):
             if not jeX(djeca[3].tip):
                 print("<naredba_petlje> ::= "+str(djeca[0])+" "+str(djeca[1])+" <izraz_naredba> <izraz_naredba> "+str(djeca[4])+" <naredba>")
                 return False
-            if not provjeri(djeca[5]):
+            if not provjeri(djeca[5], tablica_IDN, djelokrug[:] + ["PETLJA"]):
                 return False
 
         elif(djeca[4] == "<izraz>"):
@@ -780,7 +783,7 @@ def provjeri(cvor, tablica_IDN):
                 return False
             if not provjeri(djeca[4]):
                 return False
-            if not provjeri(djeca[6]):
+            if not provjeri(djeca[6], tablica_IDN, djelokrug[:] + ["PETLJA"]):
                 return False
 
         else:
@@ -789,17 +792,38 @@ def provjeri(cvor, tablica_IDN):
     
     elif(cvor.znak == "<naredba_skoka>"):
         if(djeca[0].znak == "KR_CONTINUE" or djeca[0].znak == "KR_BREAK"):
-            #TODO naredba se nalazi unutar petlje ili unutar bloka koji je ugnijeˇzden u petlji
-            pass
+            if not djelokrug[len(djelokrug)-1] == "PETLJA":
+                print("<naredba_skoka> ::= "+ str(djeca[0]) + " " + str(djeca[1]))
+                return False
 
         elif(djeca[1].znak == "TOCKAZAREZ"):
-            #TODO 1. naredba se nalazi unutar funkcije tipa funkcija(params → void)
-            pass
+            i = len(djelokrug) - 1
+            while(djelokrug[i] != "GLOBAL"):
+                if isinstance(djelokrug[i], Funkcija):
+                    funkcija = djelokrug[i]
+                    if funkcija.pov != "void":
+                        print("<naredba_skoka> ::= "+ str(djeca[0]) + " " + str(djeca[1]))
+                        return False
+                    else:
+                        return True
+            print("<naredba_skoka> ::= "+ str(djeca[0]) + " " + str(djeca[1]))
+            return False
+
 
         elif(djeca[1].znak == "<izraz>"):
             if not provjeri(djeca[1]):
                 return False
-            #TODO naredba se nalazi unutar funkcije tipa funkcija(params → pov) i vrijedi <izraz>.tip ∼ pov
+            i = len(djelokrug) - 1
+            while(djelokrug[i] != "GLOBAL"):
+                if isinstance(djelokrug[i], Funkcija):
+                    funkcija = djelokrug[i]
+                    if not ImplicitnoXToY(djeca[1], funkcija.pov):
+                        print("<naredba_skoka> ::= "+ str(djeca[0]) + " <izraz> " + str(djeca[2]))
+                        return False
+                    else:
+                        return True
+            print("<naredba_skoka> ::= "+ str(djeca[0]) + " <izraz> " + str(djeca[2]))
+            return False
         
         else:
             print("POGREŠKA U <naredba_skoka>")
@@ -845,7 +869,7 @@ def provjeri(cvor, tablica_IDN):
             else:
                 tablica_IDN[djeca[1].vrijednost].definirana = True
             
-            if not provjeri(djeca[5], copy.deepcopy(tablica_IDN)):
+            if not provjeri(djeca[5], copy.deepcopy(tablica_IDN), djelokrug[:] + [Funkcija("void", djeca[0].tip)]):
                 return False
         
         elif(djeca[3].znak == "<lista_parametara>"):
@@ -864,7 +888,7 @@ def provjeri(cvor, tablica_IDN):
                 return False  
             
             if tablica_IDN[djeca[1].vrijednost] == None:
-                tablica_IDN[djeca[1].vrijednost] = Funkcija("void", djeca[0].tip, True)
+                tablica_IDN[djeca[1].vrijednost] = Funkcija(djeca[3].tipovi, djeca[0].tip, True)
             else:
                 tablica_IDN[djeca[1].vrijednost].definirana = True
             
@@ -872,7 +896,7 @@ def provjeri(cvor, tablica_IDN):
             for i in range(len(djeca[3].tipovi)):
                 nova_tablica[djeca[3].imena[i]] = djeca[3].tipovi[i]
 
-            if not provjeri(djeca[5], nova_tablica):
+            if not provjeri(djeca[5], nova_tablica, djelokrug[:] + [Funkcija(djeca[3].tipovi, djeca[0].tip)]):
                 return False
             
 
@@ -1117,4 +1141,4 @@ def provjeri(cvor, tablica_IDN):
     
     
 #golablni_djelokrug = dict()
-#provjeri(korijen, golablni_djelokrug, ["global"])
+#provjeri(korijen, golablni_djelokrug, ["GLOBAL"])
