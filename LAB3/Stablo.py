@@ -7,6 +7,7 @@ class Cvor:
         self.ime = None #Marin dodavanje
         self.imena = None #Marin dodavanje
         self.ntip = None
+        self.brelem = None
 
     def __repr__(self):
         return "Cvor(" + self.znak + ")"

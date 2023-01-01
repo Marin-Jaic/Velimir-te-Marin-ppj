@@ -13,8 +13,20 @@ def jebroj(broj):
     broj = int(broj)
     return (-2147483648 <= broj and broj <= 2147483647)
 
+def je1do1024(broj):
+    if not broj.isdigit():
+        return False
+    broj = int(broj)
+    return (0 < broj and broj <= 1024)
+
+
 
 def jeznak(znak):
+    if znak[0] != '\"':
+        return False
+    if znak[len(znak) - 1] != "\"":
+        return False
+    znak = znak[1:(len(znak)-1)]
     if(len(znak) == 1 and znak[0] != "\\"):
         return True
     elif(len(znak) == 2 and znak[0] == "\\" and znak[1] in ("t", "n", "0", "\'", "\"", "\\")):
@@ -23,6 +35,11 @@ def jeznak(znak):
 
 
 def jenizznakova(niz):
+    if niz[0] != '\"':
+        return False
+    if niz[len(niz) - 1] != "\"":
+        return False
+
     it = 0
     while("\\" in niz[it:]):
         it = niz[it:].index("\\")
@@ -833,11 +850,11 @@ def provjeri(cvor, tablica_IDN):
             else:
                 tablica_IDN[djeca[1].vrijednost].definirana = True
             
-            nova_tablica = copy.deepcopy(tablica_IDN)
+            #nova_tablica = copy.deepcopy(tablica_IDN) to ne radimo ovdje nego prije ulaska u dublji djelokrug
             for i in range(len(djeca[3].tipovi)):
-                nova_tablica[djeca[3].imena[i]] = djeca[3].tipovi[i]
+                tablica_IDN[djeca[3].imena[i]] = djeca[3].tipovi[i]
 
-            if not provjeri(djeca[5], nova_tablica):
+            if not provjeri(djeca[5], tablica_IDN):
                 return False
             
 
@@ -912,25 +929,31 @@ def provjeri(cvor, tablica_IDN):
         if(djeca[0].znak == "<ime_tipa>"):
             if not provjeri(djeca[0]): 
                 return False      
-            #TODO provjeri(<lista_init_deklaratora>) uz nasljedno svojstvo <lista_init_deklaratora>.ntip ← <ime_tipa>.tip
+            
+            djeca[1].ntip = djeca[0].tip
 
-            # Specifiˇcnost toˇcke 2 je nasljedno svojstvo ntip nezavrˇsnog znaka <lista_init_deklaratora>.
-            # Svojstvo ntip sluˇzi za prijenos jednog dijela informacije o tipu u sve deklaratore. Za varijable brojevnog 
-            # tipa ntip ´ce biti cijeli tip, za nizove ´ce biti tip elementa niza, a za funkcije ´ce biti povratni tip.
-        
+            if not provjeri(djeca[1]):
+                return False
+
         else:
             print("POGREŠKA U <deklaracija>")
             return False
 
     elif(cvor.znak == "<lista_init_deklaratora>"):
         if(djeca[0].znak == "<init_deklarator>"):
-            #TODO provjeri(<init_deklarator>) uz nasljedno svojstvo <<init_deklarator>>.ntip ← <lista_init_deklaratora>.tip
-            gas = 0
+            djeca[0].ntip = cvor.ntip
+            if not provjeri(djeca[0]):
+                return False
 
         elif(djeca[0].znak == "<init_deklarator>"): #cudno je numerirano nesto u ovoj produkciji str 68 pa samo ostavljam natuknicu
-            #TODO provjeri(<lista_init_deklaratora>2) uz nasljedno svojstvo <lista_init_deklaratora>2.ntip ← <lista_init_deklaratora>1.ntip
-            #TODO provjeri(<init_deklarator>) uz nasljedno svojstvo <init_deklarator>.ntip ← <lista_init_deklaratora>1.ntip
-            gas = 0
+
+            djeca[0].ntip = cvor.ntip
+            if not provjeri(djeca[0]):
+                return False
+            
+            djeca[2].ntip = cvor.ntip
+            if not provjeri(djeca[2]):
+                return False
         
         else:
             print("POGREŠKA U <lista_init_deklaratora>")
@@ -938,22 +961,32 @@ def provjeri(cvor, tablica_IDN):
     
     elif(cvor.znak == "<init_deklarator>"):
         if(len(djeca) == 1):
-            #TODO provjeri(<izravni_deklarator>) uz nasljedno svojstvo <izravni_deklarator>.ntip ← <init_deklarator>.ntip
+            djeca[0].ntip = cvor.ntip
+            if not provjeri(djeca[0]):
+                return False
             if jeConstT(djeca[0].tip) or jeNizConstT(djeca[0].tip):
+                print("<init_deklarator> ::= <izravni_deklarator>")
                 return False
     
         elif(len(djeca) == 3):
-            #TODO provjeri(<izravni_deklarator>) uz nasljedno svojstvo <izravni_deklarator>.ntip ← <init_deklarator>.ntip
+            djeca[0].ntip = cvor.ntip
+            if not provjeri(djeca[0]):
+                return False
             if not provjeri(djeca[2]):
                 return False
 
             if jeT(djeca[0].tip) or jeConstT(djeca[0].tip):
-                #TODO <inicijalizator>.tip ∼ T
-                gas = 0
+                pass
             elif jeNizT(djeca[0].tip) or jeNizConstT(djeca[0].tip):
-                #TODO <inicijalizator>.br-elem ≤ <izravni_deklarator>.br-elem za svaki U iz <inicijalizator>.tipovi vrijedi U ∼ T
-                gas = 0
+                if not djeca[2].brelem <= djeca[0].brelem:
+                    print("<init_deklarator> ::= <izravni_deklarator> "+str(djeca[1])+" <inicijalizator>")
+                    return False 
+                for tip in djeca[2].tipovi:
+                    if not ImplicitnoXToY(tip, djeca[0].tip):
+                        print("<init_deklarator> ::= <izravni_deklarator> "+str(djeca[1])+" <inicijalizator>")
+                        return False 
             else:
+                print("<init_deklarator> ::= <izravni_deklarator> "+str(djeca[1])+" <inicijalizator>")
                 return False 
         
         else:
@@ -962,42 +995,67 @@ def provjeri(cvor, tablica_IDN):
     
     elif(cvor.znak == "<izravni_deklarator>"):
         if(len(djeca) == 1):
-            #TODO ntip != void
-            #TODO IDN.ime nije deklarirano u lokalnom djelokrugu
-            #TODO zabiljeˇzi deklaraciju IDN.ime s odgovaraju´cim tipom
+            if cvor.ntip == "void":
+                print("<izravni_deklarator> ::= "+str(djeca[0]))
+                return False
+            
+            if tablica_IDN[djeca[0].vrijednost] != None:
+                print("<izravni_deklarator> ::= "+str(djeca[0]))
+                return False
 
-            #TODO tip ← ntip
-            gas = 0
+            tablica_IDN[djeca[0].vrijednost] = cvor.ntip
+
+            cvor.tip = cvor.ntip
+
 
         elif(djeca[2].znak == "BROJ"):
-            #TODO ntip != void
-            #TODO IDN.ime nije deklarirano u lokalnom djelokrugu
-            #TODO zabiljeˇzi deklaraciju IDN.ime s odgovaraju´cim tipom
+            if cvor.ntip == "void":
+                print("<izravni_deklarator> ::= "+str(djeca[0])+" "+str(djeca[1])+" "+str(djeca[2])+" "+str(djeca[3]))
+                return False
+            
+            if tablica_IDN[djeca[0].vrijednost] != None:
+                print("<izravni_deklarator> ::= "+str(djeca[0])+" "+str(djeca[1])+" "+str(djeca[2])+" "+str(djeca[3]))
+                return False
+            
+            if not je1do1024(djeca[2].vrijednost):
+                print("<izravni_deklarator> ::= "+str(djeca[0])+" "+str(djeca[1])+" "+str(djeca[2])+" "+str(djeca[3]))
+                return False
 
-            #TODO tip ← ntip
-            #TODO br-elem ← BROJ.vrijednost
-            gas = 0
+            tablica_IDN[djeca[0].vrijednost] = "niz("+ cvor.ntip + ")"
+            cvor.tip = "niz("+ cvor.ntip + ")"
+            cvor.brelem = int(djeca[2].vrijednost)
+
 
         elif(djeca[2].znak == "KR_VOID"):
-            #TODO ako je IDN.ime deklarirano u lokalnom djelokrugu, tip prethodne deklaracije je jednak funkcija(void → ntip)
-            #TODO zabiljeˇzi deklaraciju IDN.ime s odgovaraju´cim tipom ako ista funkcija ve´c nije deklarirana u lokalnom djelokrugu
 
-            #TODO tip ← funkcija(void → ntip)
-            gas = 0
+            if tablica_IDN[djeca[0].vrijednost] != None and not (tablica_IDN[djeca[0].vrijednost].params == "void" and tablica_IDN[djeca[0].vrijednost].pov == cvor.ntip):
+                print("<izravni_deklarator> ::= "+str(djeca[0])+" "+str(djeca[1])+" "+str(djeca[2])+" "+str(djeca[3]))
+                return False
+
+            if tablica_IDN[djeca[0].vrijednost] == None:
+                tablica_IDN[djeca[0].vrijednost] = Funkcija("void", cvor.ntip)
+
+            cvor.tip = Funkcija("void", cvor.ntip)
+
         
         elif(djeca[2].znak == "<lista_parametara>"):
             if not provjeri(djeca[3]):
                 return False
-            #TODO ako je IDN.ime deklarirano u lokalnom djelokrugu, tip prethodne deklaracije je jednak funkcija(<lista_parametara>.tipovi → ntip)
-            #TODO zabiljeˇzi deklaraciju IDN.ime s odgovaraju´cim tipom ako ista funkcija ve´c nije deklarirana u lokalnom djelokrugu
 
-            #TODO tip ← funkcija(<lista_parametara>.tipovi → ntip)
+            if tablica_IDN[djeca[0].vrijednost] != None and not (tablica_IDN[djeca[0].vrijednost].params == djeca[2].tipovi and tablica_IDN[djeca[0].vrijednost].pov == cvor.ntip):
+                print("<izravni_deklarator> ::= "+str(djeca[0])+" "+str(djeca[1])+" "+str(djeca[2])+" "+str(djeca[3]))
+                return False
+
+            if tablica_IDN[djeca[0].vrijednost] == None:
+                tablica_IDN[djeca[0].vrijednost] = Funkcija(djeca[2].tipovi, cvor.ntip)
+
+            cvor.tip = Funkcija(djeca[2].tipovi, cvor.ntip)
 
         else:
             print("POGREŠKA U <izravni_deklarator>")
             return False
     
-    elif(cvor.znak == "<izravni_deklarator>"):
+    elif(cvor.znak == "<inicijalizator>"):
         if not provjeri(djeca[0]):
             return False
 
