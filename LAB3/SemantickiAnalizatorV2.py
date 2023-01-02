@@ -200,6 +200,17 @@ def provjeri(cvor, tablica_IDN, djelokrug):
             cvor.lizraz = djeca[0].lizraz
             cvor.brelem = djeca[0].brelem
         
+        elif(djeca[1].znak == "OP_INC" or djeca[1].znak == "OP_DEC"):
+            cvor.tip = "int"
+            cvor.lizraz = False
+
+            if not provjeri(djeca[0], tablica_IDN, djelokrug):
+                return False
+
+            if not djeca[0].lizraz or not jeX(djeca[0].tip): #Ponovno pretpostavka da je X jednako kao implicitno castabilan u int
+                print("<postfiks_izraz> ::= <postfiks_izraz> " + str(djeca[1]))
+                return False
+        
         elif(djeca[2].znak == "<izraz>"):
             if not provjeri(djeca[0], tablica_IDN, djelokrug):
                 return False
@@ -243,7 +254,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
                 return False
 
             for i in range(len(djeca[2].tipovi)):
-                if not ImplicitnoXToY(djeca[0].tip.params[i], djeca[2].tipovi[i]):
+                if not ImplicitnoXToY(djeca[2].tipovi[i], djeca[0].tip.params[i]):
                     #print(djeca[0].tip.params[i], djeca[2].tipovi[i])
                     print("<postfiks_izraz> ::= <postfiks_izraz> " + str(djeca[1]) + " <lista_argumenata> " + str(djeca[3]))
                     return False
@@ -252,16 +263,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
             cvor.lizraz = False
 
 
-        elif(djeca[1].znak == "OP_INC" or djeca[1].znak == "OP_DEC"):
-            cvor.tip = "int"
-            cvor.lizraz = False
-
-            if not provjeri(djeca[0], tablica_IDN, djelokrug):
-                return False
-
-            if not djeca[0].lizraz or not jeX(djeca[0].tip): #Ponovno pretpostavka da je X jednako kao implicitno castabilan u int
-                print("<postfiks_izraz> ::= <postfiks_izraz> " + str(djeca[1]))
-                return False
+      
 
         else:
             print("POGREŠKA U <postfiks_izraz>")
@@ -753,6 +755,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
     elif(cvor.znak == "<naredba>"):
         #TODO mozda treba razdvojit
         if djeca[0].znak == "<slozena_naredba>" or djeca[0].znak == "<naredba_petlje>":
+
             if not provjeri(djeca[0], copy.deepcopy(tablica_IDN), djelokrug[:] + [djelokrugPodatak("BLOK", len(djelokrug) + 1)]):
                 return False
         else:
@@ -966,11 +969,13 @@ def provjeri(cvor, tablica_IDN, djelokrug):
             else:
                 tablica_IDN[djeca[1].vrijednost].tip.definirana = True
             
+            #TODO MOZDA ZAJEBAJE
+            novi_djelokrug = djelokrug[:] + [djelokrugPodatak(Funkcija(djeca[3].tipovi, djeca[0].tip), len(djelokrug)+1)]
             nova_tablica = copy.deepcopy(tablica_IDN) 
             for i in range(len(djeca[3].tipovi)):
-                nova_tablica[djeca[3].imena[i]] = tablicaPodatak(djeca[3].tipovi[i], djelokrug[-1])
+                nova_tablica[djeca[3].imena[i]] = tablicaPodatak(djeca[3].tipovi[i], novi_djelokrug[-1])
 
-            if not provjeri(djeca[5], nova_tablica, djelokrug[:] + [djelokrugPodatak(Funkcija(djeca[3].tipovi, djeca[0].tip), len(djelokrug)+1)]):
+            if not provjeri(djeca[5], nova_tablica, novi_djelokrug):
                 return False
             
 
@@ -1093,7 +1098,9 @@ def provjeri(cvor, tablica_IDN, djelokrug):
 
             if jeT(djeca[0].tip) or jeConstT(djeca[0].tip):
                 #Marin promjena
-                if not ImplicitnoXToY(djeca[2].tip, "T"):
+                #print(djeca[0].tip, djeca[2].tip)
+                #TODO ovo je sus (je li sukladno s uputama??)
+                if not ImplicitnoXToY(djeca[2].tip, djeca[0].tip):
                     print("<init_deklarator> ::= <izravni_deklarator> "+str(djeca[1])+" <inicijalizator>")
                     return False
             elif jeNizT(djeca[0].tip) or jeNizConstT(djeca[0].tip):
@@ -1102,7 +1109,6 @@ def provjeri(cvor, tablica_IDN, djelokrug):
                     return False 
 
                 for tip in djeca[2].tipovi:
-                    print(tip)
                     #if not ImplicitnoXToY(tip, djeca[0].tip)
                     if not ImplicitnoXToY(tip, "T"):
                         print("<init_deklarator> ::= <izravni_deklarator> "+str(djeca[1])+" <inicijalizator>")
@@ -1117,12 +1123,17 @@ def provjeri(cvor, tablica_IDN, djelokrug):
     
     elif(cvor.znak == "<izravni_deklarator>"):
         if(len(djeca) == 1):
+            #print(cvor.djeca, tablica_IDN, djelokrug)
+
             if cvor.ntip == "void":
                 print("<izravni_deklarator> ::= "+str(djeca[0]))
                 return False
             
             
             #if tablica_IDN[djeca[0].vrijednost] != None and tablica_IDN[djeca[0].vrijednost].djelokrug == djelokrug[-1]:
+            #if djeca[0].vrijednost in tablica_IDN.keys():
+            #    print(tablica_IDN[djeca[0].vrijednost].djelokrug, djelokrug[-1])
+            
             if djeca[0].vrijednost in tablica_IDN.keys() and tablica_IDN[djeca[0].vrijednost].djelokrug == djelokrug[-1]:
                 print("<izravni_deklarator> ::= "+str(djeca[0]))
                 return False

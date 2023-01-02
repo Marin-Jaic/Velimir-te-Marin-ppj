@@ -19,9 +19,9 @@ class List(Cvor):
         super().__init__(znak)
 
     def __str__(self):
-        return self.znak + "(" + self.red + ", " + self.vrijednost + ")"
+        return self.znak + "(" + self.red + "," + self.vrijednost + ")"
     def __repr__(self):
-        return self.znak + "(" + self.red + ", " + self.vrijednost + ")"
+        return self.znak + "(" + self.red + "," + self.vrijednost + ")"
 
 class ListEps(Cvor):
     def __init__(self):
@@ -42,12 +42,20 @@ class Funkcija:
         self.params = params
         self.pov = pov
         self.definirana = definirana
+    def __repr__(self):
+        return "funkcija: " + str(self.params) + " -> " + self.pov
+
+    def __eq__(self, other):
+        if not isinstance(other, Funkcija):
+            return False
+        return self.params == other.params and self.pov == other.pov
 
 class tablicaPodatak:
     def __init__(self, tip, djelokrug):
         self.tip = tip
         self.djelokrug = djelokrug
-
+    def __repr__(self):
+        return "tip: " + str(self.tip) + " djelokrug: " + str(self.djelokrug)
 class djelokrugPodatak:
     def __init__(self, vrsta, dubina):
         self.vrsta = vrsta
@@ -55,3 +63,8 @@ class djelokrugPodatak:
     
     def __eq__(self, other):
         return self.vrsta == other.vrsta and self.dubina == other.dubina
+    
+    def __repr__(self):
+        return "(vrsta: " +str(self.vrsta) + " dub: " + str(self.dubina) + ")"
+    def __str__(self):
+        return "(vrsta: " +str(self.vrsta) + " dub: " + str(self.dubina) + ")"
