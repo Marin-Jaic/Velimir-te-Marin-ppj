@@ -35,8 +35,8 @@ def stvori_cvor(ulaz, line_index, depth):
 
 def ulaz():
     ulaz = sys.stdin.read().split("\n")
-    #file = open("./LAB3/ulazi/ulaz.sem", "r")
-    #ulaz = file.readlines()
+    # file = open("./LAB3/ulazi/ulaz.sem", "r")
+    # ulaz = file.readlines()
 
     return stvori_cvor(ulaz, 0, 0)[0]
 
