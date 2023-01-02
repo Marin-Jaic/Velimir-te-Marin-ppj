@@ -87,18 +87,19 @@ def ImplicitnoXToY(x, y): # Gleda vrijedi li x ~ y, nisam sto posto ako je tranz
     return (jeT(x) and jeX(y) or jeConstT(x) and jeX(y) or jeNizT(x) and jeNizX(y)) and not (x == "int" and y == "char")
 
 def EksplicitnoXToY(x, y):
-    #return jeX(x) and jeT(y)
+    return jeX(x) and jeX(y)
     #return x == "char" and y == "int"
-    return ImplicitnoXToY(x, y) #? ovako radi ig
+    #return ImplicitnoXToY(x, y) #? ovako radi ig
 
 def checkFunkcije(tablica_IDN, djelokrug):
     global allDeclared
     for value in tablica_IDN.values():
-            if isinstance(value.tip, Funkcija) and not value.tip.definirana and djelokrug[-1] == value.djelokrug:
-                allDeclared = False
-                break
+        if isinstance(value.tip, Funkcija) and not value.tip.definirana and djelokrug[-1] == value.djelokrug:
+            allDeclared = False
+            break
 
-def zavrsnaProvjera(tablica_IDN):
+def zavrsnaProvjera(tablica_IDN, djelokrug):
+    checkFunkcije(tablica_IDN, djelokrug)
     if not ("main" in tablica_IDN.keys() and isinstance(tablica_IDN["main"].tip, Funkcija) and tablica_IDN["main"].tip.params == "void" and tablica_IDN["main"].tip.pov == "int"):
         print("main")
     elif not allDeclared:
@@ -112,11 +113,11 @@ def provjeri(cvor, tablica_IDN, djelokrug):
     # if isinstance(cvor, UnutarnjiCvor):
     #     djeca = cvor.djeca
 
-    global whitespaces
-    for i in range(whitespaces):
-        print(" ", end ="")
-    whitespaces+=1
-    print(cvor.znak, "->", cvor.djeca)
+    # global whitespaces
+    # for i in range(whitespaces):
+    #     print(" ", end ="")
+    # whitespaces+=1
+    # print(cvor.znak, "->", cvor.djeca)
     djeca = cvor.djeca
 
     if(cvor.znak == "<primarni_izraz>"):
@@ -236,7 +237,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
             
             if not provjeri(djeca[2], tablica_IDN, djelokrug):
                 return False
-            
+            #print(isinstance(djeca[0].tip, Funkcija), isinstance(djeca[0].tip.params, list), len(djeca[0].tip.params), len(djeca[2].tipovi))
             if not (isinstance(djeca[0].tip, Funkcija) and isinstance(djeca[0].tip.params, list) and len(djeca[0].tip.params) == len(djeca[2].tipovi)):
                 print("<postfiks_izraz> ::= <postfiks_izraz> " + str(djeca[1]) + " <lista_argumenata> " + str(djeca[3]))
                 return False
@@ -750,6 +751,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
             return False
 
     elif(cvor.znak == "<naredba>"):
+        #TODO mozda treba razdvojit
         if djeca[0].znak == "<slozena_naredba>" or djeca[0].znak == "<naredba_petlje>":
             if not provjeri(djeca[0], copy.deepcopy(tablica_IDN), djelokrug[:] + [djelokrugPodatak("BLOK", len(djelokrug) + 1)]):
                 return False
@@ -811,7 +813,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
             if not provjeri(djeca[4], tablica_IDN, djelokrug[:] + [djelokrugPodatak("PETLJA", len(djelokrug) + 1)]):
                 return False
         
-        elif(djeca[4] == "D_ZAGRADA"):
+        elif(djeca[4].znak == "D_ZAGRADA"):
             if not provjeri(djeca[2], tablica_IDN, djelokrug):
                 return False
             if not provjeri(djeca[3], tablica_IDN, djelokrug):
@@ -822,7 +824,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
             if not provjeri(djeca[5], tablica_IDN, djelokrug[:] + [djelokrugPodatak("PETLJA", len(djelokrug) + 1)]):
                 return False
 
-        elif(djeca[4] == "<izraz>"):
+        elif(djeca[4].znak == "<izraz>"):
             if not provjeri(djeca[2], tablica_IDN, djelokrug):
                 return False
             if not provjeri(djeca[3], tablica_IDN, djelokrug):
@@ -916,18 +918,19 @@ def provjeri(cvor, tablica_IDN, djelokrug):
             if not provjeri(djeca[0], tablica_IDN, djelokrug):
                 return False
             #if not jeConstT(djeca[0].tip):
+
             if jeConstT(djeca[0].tip):
                 print("<definicija_funkcije> ::= <ime_tipa> "+str(djeca[1])+" "+str(djeca[2])+" "+str(djeca[3])+" "+str(djeca[4])+" <slozena_naredba>")
                 return False
             #mogu li dvije funkcije s istim imenima biti definirane u razlicitm djelokrugovima?
             #if (tablica_IDN[djeca[1].vrijednost].tip != None and isinstance(tablica_IDN[djeca[1].vrijednost].tip, Funkcija) and tablica_IDN[djeca[1].vrijednost].tip.definirana):
             if (djeca[1].vrijednost in tablica_IDN.keys() and isinstance(tablica_IDN[djeca[1].vrijednost].tip, Funkcija) and tablica_IDN[djeca[1].vrijednost].tip.definirana): 
-                print("<definicija_funkcije> ::= <ime_tipa> "+djeca[1]+" "+djeca[2]+" "+djeca[3]+" "+djeca[4]+" <slozena_naredba>")
+                print("<definicija_funkcije> ::= <ime_tipa> "+str(djeca[1])+" "+str(djeca[2])+" "+str(djeca[3])+" "+str(djeca[4])+" <slozena_naredba>")
                 return False  
             #if not (tablica_IDN[djeca[1].vrijednost].tip != None and isinstance(tablica_IDN[djeca[1].vrijednost].tip, Funkcija) and tablica_IDN[djeca[1].vrijednost].tip.params == "void" and tablica_IDN[djeca[1].vrijednost].tip.pov == djeca[0].tip):
             #if not (djeca[1].vrijednost in tablica_IDN.keys() and isinstance(tablica_IDN[djeca[1].vrijednost].tip, Funkcija) and tablica_IDN[djeca[1].vrijednost].tip.params == "void" and tablica_IDN[djeca[1].vrijednost].tip.pov == djeca[0].tip):
             if djeca[1].vrijednost in tablica_IDN.keys() and isinstance(tablica_IDN[djeca[1].vrijednost].tip, Funkcija) and not tablica_IDN[djeca[1].vrijednost].tip.definirana and not (tablica_IDN[djeca[1].vrijednost].tip.params == "void" and tablica_IDN[djeca[1].vrijednost].tip.pov == djeca[0].tip):
-                print("<definicija_funkcije> ::= <ime_tipa> "+djeca[1]+" "+djeca[2]+" "+djeca[3]+" "+djeca[4]+" <slozena_naredba>")
+                print("<definicija_funkcije> ::= <ime_tipa> "+str(djeca[1])+" "+str(djeca[2])+" "+str(djeca[3])+" "+str(djeca[4])+" <slozena_naredba>")
                 return False  
             
             
@@ -943,18 +946,18 @@ def provjeri(cvor, tablica_IDN, djelokrug):
         elif(djeca[3].znak == "<lista_parametara>"):
             if not provjeri(djeca[0], tablica_IDN, djelokrug):
                 return False
-            if not jeConstT(djeca[0].tip):
+            if jeConstT(djeca[0].tip):
                 print("<definicija_funkcije> ::= <ime_tipa> "+str(djeca[1])+" "+str(djeca[2])+" <lista_parametara> "+str(djeca[4])+" <slozena_naredba>")
                 return False
             #if (tablica_IDN[djeca[1].vrijednost].tip != None and isinstance(tablica_IDN[djeca[1].vrijednost].tip, Funkcija) and tablica_IDN[djeca[1].vrijednost].tip.definirana): 
             if (djeca[1].vrijednost in tablica_IDN.keys() and isinstance(tablica_IDN[djeca[1].vrijednost], Funkcija) and tablica_IDN[djeca[1].vrijednost].definirana):
-                print("<definicija_funkcije> ::= <ime_tipa> "+djeca[1]+" "+djeca[2]+" "+djeca[3]+" "+djeca[4]+" <slozena_naredba>")
+                print("<definicija_funkcije> ::= <ime_tipa> "+str(djeca[1])+" "+str(djeca[2])+" <lista_parametara> "+str(djeca[4])+" <slozena_naredba>")
                 return False  
-            if not provjeri(djeca[2], tablica_IDN, djelokrug):
+            if not provjeri(djeca[3], tablica_IDN, djelokrug):
                 return False
             #if not (tablica_IDN[djeca[1].vrijednost].tip != None and isinstance(tablica_IDN[djeca[1].vrijednost].tip, Funkcija) and tablica_IDN[djeca[1].vrijednost].tip.params == djeca[3].tipovi and tablica_IDN[djeca[1].vrijednost].tip.pov == djeca[0].tip):
-            if not (djeca[1].vrijednost in tablica_IDN.keys() and isinstance(tablica_IDN[djeca[1].vrijednost].tip, Funkcija) and tablica_IDN[djeca[1].vrijednost].tip.params == djeca[3].tipovi and tablica_IDN[djeca[1].vrijednost].tip.pov == djeca[0].tip): 
-                print("<definicija_funkcije> ::= <ime_tipa> "+djeca[1]+" "+djeca[2]+" "+djeca[3]+" "+djeca[4]+" <slozena_naredba>")
+            if (djeca[1].vrijednost in tablica_IDN.keys() and isinstance(tablica_IDN[djeca[1].vrijednost].tip, Funkcija) and tablica_IDN[djeca[1].vrijednost].tip.params == djeca[3].tipovi and tablica_IDN[djeca[1].vrijednost].tip.pov == djeca[0].tip): 
+                print("<definicija_funkcije> ::= <ime_tipa> "+str(djeca[1])+" "+str(djeca[2])+" <lista_parametara> "+str(djeca[4])+" <slozena_naredba>")
                 return False  
             
             #if tablica_IDN[djeca[1].vrijednost] == None:
@@ -965,7 +968,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
             
             nova_tablica = copy.deepcopy(tablica_IDN) 
             for i in range(len(djeca[3].tipovi)):
-                nova_tablica[djeca[3].imena[i]] = djeca[3].tipovi[i]
+                nova_tablica[djeca[3].imena[i]] = tablicaPodatak(djeca[3].tipovi[i], djelokrug[-1])
 
             if not provjeri(djeca[5], nova_tablica, djelokrug[:] + [djelokrugPodatak(Funkcija(djeca[3].tipovi, djeca[0].tip), len(djelokrug)+1)]):
                 return False
@@ -980,7 +983,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
             if not provjeri(djeca[0], tablica_IDN, djelokrug):
                 return False
             cvor.tipovi = [ djeca[0].tip ]
-            cvor.tipovi = [ djeca[0].ime ]
+            cvor.imena = [ djeca[0].ime ]
         
         elif(djeca[0].znak == "<lista_parametara>"):
             if not provjeri(djeca[0], tablica_IDN, djelokrug):
@@ -1058,7 +1061,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
             if not provjeri(djeca[0], tablica_IDN, djelokrug):
                 return False
 
-        elif(djeca[0].znak == "<init_deklarator>"): #cudno je numerirano nesto u ovoj produkciji str 68 pa samo ostavljam natuknicu
+        elif(djeca[0].znak == "<lista_init_deklaratora>"): #cudno je numerirano nesto u ovoj produkciji str 68 pa samo ostavljam natuknicu
 
             djeca[0].ntip = cvor.ntip
             if not provjeri(djeca[0], tablica_IDN, djelokrug):
@@ -1171,9 +1174,9 @@ def provjeri(cvor, tablica_IDN, djelokrug):
                 return False
 
             #if tablica_IDN[djeca[0].vrijednost] == None:
-            if not djeca[0].vrijednost in tablica_IDN.keys():
+            if not djeca[0].vrijednost in tablica_IDN.keys() or djelokrug[-1] != tablica_IDN[djeca[0].vrijednost].djelokrug:
                 tablica_IDN[djeca[0].vrijednost] = tablicaPodatak(Funkcija(djeca[2].tipovi, cvor.ntip), djelokrug[-1])
-
+            #print(djeca[2].tipovi)
             cvor.tip = Funkcija(djeca[2].tipovi, cvor.ntip)
 
         else:
@@ -1226,9 +1229,11 @@ def provjeri(cvor, tablica_IDN, djelokrug):
     if allDeclared:
         checkFunkcije(tablica_IDN, djelokrug)
     
-    whitespaces -=1
+    #whitespaces -=1
     return True
 
-golablni_djelokrug = dict()
-if provjeri(korijen, golablni_djelokrug, [djelokrugPodatak("GLOBAL", 1)]):
-    zavrsnaProvjera(golablni_djelokrug)
+djelokrug = [djelokrugPodatak("GLOBAL", 1)]
+golablni_djelokrug_IDN = dict()
+if provjeri(korijen, golablni_djelokrug_IDN, djelokrug):
+    zavrsnaProvjera(golablni_djelokrug_IDN, djelokrug)
+    

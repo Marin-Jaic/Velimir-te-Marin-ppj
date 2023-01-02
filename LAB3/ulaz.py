@@ -3,11 +3,11 @@ import sys
 
 
 def stvori_cvor(ulaz, line_index, depth):
-    print(line_index + 1, depth)
+    #print(line_index + 1, depth)
     line = ulaz[line_index]
-    print(line)
+    #print(line)
     tr_dub = next((index for index, char in enumerate(line) if not char.isspace()), None)
-    print(tr_dub)
+    #print(tr_dub)
     if(tr_dub != depth):
         return None
 

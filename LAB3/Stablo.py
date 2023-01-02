@@ -20,6 +20,8 @@ class List(Cvor):
 
     def __str__(self):
         return self.znak + "(" + self.red + ", " + self.vrijednost + ")"
+    def __repr__(self):
+        return self.znak + "(" + self.red + ", " + self.vrijednost + ")"
 
 class ListEps(Cvor):
     def __init__(self):
