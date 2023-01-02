@@ -88,6 +88,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
     # if isinstance(cvor, UnutarnjiCvor):
     #     djeca = cvor.djeca
 
+    print("Obradujem: ", cvor.znak)
     djeca = cvor.djeca
 
     if(cvor.znak == "<primarni_izraz>"):
@@ -118,7 +119,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
 
 
         elif(djeca[0].znak == "ZNAK"):
-            if not jeznak(djeca[0].vrijdnost):
+            if not jeznak(djeca[0].vrijednost):
                 print("<primarni_izraz> ::= " + str(djeca[0]))
                 return False
 
@@ -128,7 +129,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
 
 
         elif(djeca[0].znak == "NIZ_ZNAKOVA"):
-            if not jenizznakova(djeca[0].vrijdnost):
+            if not jenizznakova(djeca[0].vrijednost):
                 print("<primarni_izraz> ::= " + str(djeca[0]))
                 return False
 
@@ -361,12 +362,17 @@ def provjeri(cvor, tablica_IDN, djelokrug):
         
 
 
-    elif(cvor.znak == "<multiplikativni izraz>"):
+    elif(cvor.znak == "<multiplikativni_izraz>"):
         if(djeca[0].znak == "<cast_izraz>"):
             if not provjeri(djeca[0], tablica_IDN, djelokrug):
                 return False
 
-            cvor.tip = "void"
+            # cvor.tip = "void"
+            # cvor.lizraz = djeca[0].lizraz
+            # cvor.brelem = djeca[0].brelem 
+            # ??
+
+            cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
             cvor.brelem = djeca[0].brelem
 
@@ -394,7 +400,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
     
 
 
-    elif(cvor.znak == "<aditivni izraz>"):
+    elif(cvor.znak == "<aditivni_izraz>"):
         if(djeca[0].znak == "<multiplikativni_izraz>"):
             if not provjeri(djeca[0], tablica_IDN, djelokrug):
                 return False
@@ -631,7 +637,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
             
             cvor.tip = djeca[0].tip
             cvor.lizraz = djeca[0].lizraz
-            cvor.brelem = djeca[0].brelem
+            cvor.brelem = djeca[0].brelem 
 
         elif(djeca[0].znak == "<postfiks_izraz>"):
             if not provjeri(djeca[0], tablica_IDN, djelokrug):
@@ -1070,7 +1076,6 @@ def provjeri(cvor, tablica_IDN, djelokrug):
 
             cvor.tip = cvor.ntip
 
-
         elif(djeca[2].znak == "BROJ"):
             if cvor.ntip == "void":
                 print("<izravni_deklarator> ::= "+str(djeca[0])+" "+str(djeca[1])+" "+str(djeca[2])+" "+str(djeca[3]))
@@ -1130,8 +1135,9 @@ def provjeri(cvor, tablica_IDN, djelokrug):
 
             #---Nisam siguran za ovo---
             if djeca[0].tip == "niz(const(char))":
+                #TODO ovo tu mozda nije dobro
                 cvor.brelem = djeca[0].brelem + 1 
-                cvor.tipovi = ["char" for i in range(len(cvor.brelem))]
+                cvor.tipovi = ["char" for i in range(cvor.brelem)]
             else:
                 cvor.tip = djeca[0].tip
         
@@ -1162,9 +1168,11 @@ def provjeri(cvor, tablica_IDN, djelokrug):
         else:
             print("POGREŠKA U <lista_izraza_pridruzivanja>")
     else:
+        print(djeca)
         print("NIJE PRONAĐENA PRODUKCIJA ZA: "+ str(cvor)) 
     return True
     
     
 golablni_djelokrug = dict()
-provjeri(korijen, golablni_djelokrug, [djelokrugPodatak("GLOBAL", 1)])
+if provjeri(korijen, golablni_djelokrug, [djelokrugPodatak("GLOBAL", 1)]):
+    print("uspijeh")
