@@ -1,1 +1,0 @@
-<init_deklarator> ::= <izravni_deklarator> OP_PRIDRUZI(3,=) <inicijalizator>
