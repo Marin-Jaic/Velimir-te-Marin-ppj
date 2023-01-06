@@ -1,0 +1,274 @@
+import ulaz
+import SemantickiAnalizator
+from PomocniR import *
+import Stablo
+
+
+
+#>python Leksicki/LA.py < ../../LAB4TEST/e_001/test.c | python Sintaksni/SA.py | python GeneratorKoda.py
+korijen_gen_st = SemantickiAnalizator.semanticka_analiza(ulaz.ulaz())
+
+asembler = open('a.firsc', 'w')
+
+asembler.write("\t\t`ORG 0\n")
+asembler.write("\t\tCALL F_MAIN\n")
+asembler.write("\t\tHALT\n\n")
+
+glob_f = []
+glob_var = []
+izrazi = ["<log_ili_izraz>", "<log_i_izraz>", "<aditivni_izraz>", "<jednakosni_izraz>", "<bin_ili_izraz>", "<odnosni_izraz>", "<bin_i_izraz>", "<bin_xili_izraz>"]
+id_lab = 1
+
+
+def obilazak(cvor):
+    global glob_f
+    global glob_var
+
+    if cvor.znak == "<deklaracija>":
+        glob_var += [cvor]
+    elif cvor.znak == "<definicija_funkcije>":
+        glob_f += [cvor]
+    elif isinstance(cvor, Stablo.UnutarnjiCvor):
+        for dijete in cvor.djeca:
+            obilazak(dijete)
+
+
+def analiza_deklaracije(cvor, djelokrug):
+    varijable = []
+    tip = "undefined"
+    if isinstance(cvor.djeca[0], Stablo.UnutarnjiCvor):
+        tip = cvor.djeca[0].djeca[1].vrijednost
+    else:
+        tip = cvor.djeca[0].vrijednost
+    for deklarator in cvor.djeca[1:]:
+        if deklarator.djeca[0].tip != None and deklarator.djeca[0].tip[0:4] == "niz(":
+            velicina = deklarator.djeca[0].djeca[1].vrijednost
+            inicijanti = []
+            inits = deklarator.djeca[2:]
+            if deklarator.djeca[2].znak == "<inicijalizator>":
+                inits = deklarator.djeca[2].djeca
+            for i in inits:
+                inicijanti += [i.vrijednost]
+            varijable += [Varijabla(tip, deklarator.djeca[0].djeca[0].vrijednost, inicijanti, djelokrug, int(velicina))]
+        else:
+            if len(deklarator.djeca) == 1:
+                varijable += [Varijabla(tip, deklarator.djeca[0].vrijednost, 0, djelokrug)]
+            else:
+                varijable += [Varijabla(tip, deklarator.djeca[0].vrijednost, deklarator.djeca[2].vrijednost, djelokrug)]
+    return varijable
+
+
+def izracunaj_izraz(cvor, djelokrug, asembler, lokalne_var, globalne_var):
+    global id_lab
+    if cvor.znak in izrazi:
+        izracunaj_izraz(cvor.djeca[0], djelokrug, asembler, lokalne_var, globalne_var)
+        izracunaj_izraz(cvor.djeca[2], djelokrug, asembler, lokalne_var, globalne_var)
+        asembler.write("\t\tPOP R0\n")
+        asembler.write("\t\tPOP R1\n")
+
+        if cvor.znak == "<aditivni_izraz>":
+            if cvor.djeca[1].znak == "PLUS":
+                asembler.write("\t\tADD R0, R1, R0\n")
+            elif cvor.djeca[1].znak == "MINUS":
+                asembler.write("\t\tSUB R0, R1, R0\n")
+        
+        elif cvor.znak == "<jednakosni_izraz>":
+            if cvor.djeca[1].znak == "OP_EQ":
+                asembler.write("\t\tCMP R0, R1\n")
+                asembler.write("\t\tJP_NE FA_" + str(id_lab) + "\n")
+                asembler.write("TR_" + str(id_lab) + "\t\tMOVE 1, R0\n")
+                asembler.write("\t\tJP DALJ_" + str(id_lab) + "\n")
+                asembler.write("FA_" + str(id_lab) + "\t\tMOVE 0, R0\n")
+                asembler.write("DALJ_" + str(id_lab) + "\t\t")
+                id_lab += 1
+            elif cvor.djeca[1].znak == "OP_NEQ":
+                asembler.write("\t\tCMP R0, R1\n")
+                asembler.write("\t\tJP_NE FA_" + str(id_lab) + "\n")
+                asembler.write("TR_" + str(id_lab) + "\t\tMOVE 0, R0\n")
+                asembler.write("\t\tJP DALJ_" + str(id_lab) + "\n")
+                asembler.write("FA_" + str(id_lab) + "\t\tMOVE 1, R0\n")
+                asembler.write("DALJ_" + str(id_lab) + "\t\t")
+                id_lab += 1        
+        elif cvor.znak == "<bin_ili_izraz>":
+            asembler.write("\t\tOR R0, R1, R0\n")
+        elif cvor.znak == "<bin_i_izraz>":
+            asembler.write("\t\tAND R0, R1, R0\n")
+        elif cvor.znak == "<bin_xili_izraz>":
+            asembler.write("\t\tXOR R0, R1, R0\n")
+        elif cvor.znak == "<odnosni_izraz>":
+            if cvor.djeca[1].znak == "OP_LT":
+                asembler.write("\t\tCMP R1, R0\n")
+                asembler.write("\t\tJP_SLT TR_" + str(id_lab) + "\n")
+                asembler.write("FA_" + str(id_lab) + "\t\tMOVE 0, R0\n")
+                asembler.write("\t\tJP DALJ_" + str(id_lab) + "\n")
+                asembler.write("TR_" + str(id_lab) + "\t\tMOVE 1, R0\n")
+                asembler.write("DALJ_" + str(id_lab) + "\t\t")
+                id_lab += 1
+            elif cvor.djeca[1].znak == "OP_GT":
+                asembler.write("\t\tCMP R1, R0\n")
+                asembler.write("\t\tJP_SGT TR_" + str(id_lab) + "\n")
+                asembler.write("FA_" + str(id_lab) + "\t\tMOVE 0, R0\n")
+                asembler.write("\t\tJP DALJ_" + str(id_lab) + "\n")
+                asembler.write("TR_" + str(id_lab) + "\t\tMOVE 1, R0\n")
+                asembler.write("DALJ_" + str(id_lab) + "\t\t")
+                id_lab += 1 
+            elif cvor.djeca[1].znak == "OP_GTE":
+                asembler.write("\t\tCMP R1, R0\n")
+                asembler.write("\t\tJP_SGE TR_" + str(id_lab) + "\n")
+                asembler.write("FA_" + str(id_lab) + "\t\tMOVE 0, R0\n")
+                asembler.write("\t\tJP DALJ_" + str(id_lab) + "\n")
+                asembler.write("TR_" + str(id_lab) + "\t\tMOVE 1, R0\n")
+                asembler.write("DALJ_" + str(id_lab) + "\t\t")
+                id_lab += 1   
+            elif cvor.djeca[1].znak == "OP_LTE":
+                asembler.write("\t\tCMP R1, R0\n")
+                asembler.write("\t\tJP_SLE TR_" + str(id_lab) + "\n")
+                asembler.write("FA_" + str(id_lab) + "\t\tMOVE 0, R0\n")
+                asembler.write("\t\tJP DALJ_" + str(id_lab) + "\n")
+                asembler.write("TR_" + str(id_lab) + "\t\tMOVE 1, R0\n")
+                asembler.write("DALJ_" + str(id_lab) + "\t\t")
+                id_lab += 1   
+        elif cvor.znak == "<log_i_izraz>":
+            asembler.write("\t\tMOVE 0, R2\n")
+            asembler.write("\t\tCMP R0, R2\n")
+            asembler.write("\t\tJP_NE TR_" + str(id_lab) + "\n")
+            asembler.write("FA_" + str(id_lab) + "\t\tMOVE 0, R0\n")
+            asembler.write("\t\tJP DALJ_" + str(id_lab) + "\n")
+            asembler.write("TR_" + str(id_lab) + "\t\tMOVE 1, R0\n")
+            asembler.write("DALJ_" + str(id_lab) + "\t\t")
+            id_lab += 1 
+            asembler.write("\t\tCMP R1, R2\n")
+            asembler.write("\t\tJP_NE TR_" + str(id_lab) + "\n")
+            asembler.write("FA_" + str(id_lab) + "\t\tMOVE 0, R1\n")
+            asembler.write("\t\tJP DALJ_" + str(id_lab) + "\n")
+            asembler.write("TR_" + str(id_lab) + "\t\tMOVE 1, R1\n")
+            asembler.write("DALJ_" + str(id_lab) + "\t\t")
+            id_lab += 1 
+            asembler.write("\t\tAND R0, R1, R0\n")
+        elif cvor.znak == "<log_ili_izraz>":
+            asembler.write("\t\tMOVE 0, R2\n")
+            asembler.write("\t\tCMP R0, R2\n")
+            asembler.write("\t\tJP_NE TR_" + str(id_lab) + "\n")
+            asembler.write("FA_" + str(id_lab) + "\t\tMOVE 0, R0\n")
+            asembler.write("\t\tJP DALJ_" + str(id_lab) + "\n")
+            asembler.write("TR_" + str(id_lab) + "\t\tMOVE 1, R0\n")
+            asembler.write("DALJ_" + str(id_lab) + "\t\t")
+            id_lab += 1 
+            asembler.write("\t\tCMP R1, R2\n")
+            asembler.write("\t\tJP_NE TR_" + str(id_lab) + "\n")
+            asembler.write("FA_" + str(id_lab) + "\t\tMOVE 0, R1\n")
+            asembler.write("\t\tJP DALJ_" + str(id_lab) + "\n")
+            asembler.write("TR_" + str(id_lab) + "\t\tMOVE 1, R1\n")
+            asembler.write("DALJ_" + str(id_lab) + "\t\t")
+            id_lab += 1 
+            asembler.write("\t\tOR R0, R1, R0\n")
+        asembler.write("\t\tPUSH R0\n")
+
+
+    elif cvor.znak == "BROJ":
+        asembler.write("\t\tMOVE %D "+ cvor.vrijednost +", R0\n")
+        asembler.write("\t\tPUSH R0\n")
+    elif cvor.znak == "IDN":
+        loadaj_var("R0", cvor.vrijednost, lokalne_var, globalne_var)
+        asembler.write("\t\tPUSH R0\n")
+
+def loadaj_var(reg, naziv, lokalne_var, globalne_var, indeks=None):
+    if indeks == None:
+        found = 0
+        for var in lokalne_var:
+            if var.naziv == naziv:
+                asembler.write("\t\tLOAD R6, (" + var.adr + ")\n")
+                found = 1
+                break
+        if not found:
+            for var in globalne_var:
+                if var.naziv == naziv:
+                    asembler.write("\t\tLOAD " + reg + ", (" + var.adr + ")\n")
+                    break
+    else:
+        found = 0
+        for var in lokalne_var:
+            if var.naziv == naziv:
+                asembler.write("\t\tLOAD R6, (" + var.adr[indeks] + ")\n")
+                found = 1
+                break
+        if not found:
+            for var in globalne_var:
+                if var.naziv == naziv:
+                    asembler.write("\t\tLOAD R6, (" + var.adr[indeks] + ")\n")
+                    break
+
+def analiza_funkcije(cvor, djelokrug, asembler, globalne_var):
+    blok = cvor.djeca[3]
+    naziv_f = cvor.djeca[1].vrijednost.upper()
+    deklaracije = []
+    naredbe = []
+    argumenti = cvor.djeca[2] 
+    lokalne_var = []
+    if argumenti.znak == "<lista_parametara>":
+        tipovi = argumenti.tipovi
+        imena = argumenti.imena
+        for i in range(len(tipovi)):
+            if not SemantickiAnalizator.jeNizX(tipovi[i]):
+                lokalne_var += [Varijabla(tipovi[i], imena[i], 0, djelokrug + [naziv_f])]
+    
+    args = lokalne_var[:]
+    for dijete in blok.djeca:
+        if dijete.znak == "<deklaracija>":
+            deklaracije += [dijete]
+        else:
+            naredbe += [dijete]
+    print(naredbe)
+    for deklaracija in deklaracije:
+        lokalne_var += analiza_deklaracije(deklaracija, djelokrug + [naziv_f])
+    print(lokalne_var)
+    print(args)
+    asembler.write("F_" + naziv_f.upper())
+    global izrazi
+    for naredba in naredbe:
+        if naredba.znak == "<naredba_skoka>":
+            if naredba.djeca[0].znak == "KR_RETURN":
+                if naredba.djeca[1].znak == "BROJ":
+                    asembler.write("\t\tMOVE %D " + str(naredba.djeca[1].vrijednost) + ", R6\n")
+                elif naredba.djeca[1].znak == "ZNAK":
+                    asembler.write("\t\tMOVE %D " + str(ord(naredba.djeca[1].vrijednost)) + ", R6\n")
+                elif naredba.djeca[1].znak == "IDN":
+                    loadaj_var("R6", naredba.djeca[1].vrijednost, lokalne_var, globalne_var)
+                elif naredba.djeca[1].znak == "<postfiks_izraz>":
+                    loadaj_var("R6", naredba.djeca[1].vrijednost, lokalne_var, globalne_var, int(naredba.djeca[1].djeca[1].vrijednost))
+                elif naredba.djeca[1].znak in izrazi:
+                    izracunaj_izraz(naredba.djeca[1], djelokrug, asembler, lokalne_var, globalne_var)
+                    asembler.write("\t\tPOP R6\n")
+
+                asembler.write("\t\tRET")
+    
+    
+    
+    
+    
+    return Funkcija(naziv_f, args, lokalne_var)
+
+
+
+obilazak(korijen_gen_st)
+print(glob_f)
+print(glob_var)
+
+globalne_varijable = []
+funkcije = []
+
+for i in glob_var:
+    globalne_varijable += analiza_deklaracije(i, ["G"])
+
+for i in glob_f:
+    funkcije += [analiza_funkcije(i, [], asembler, globalne_varijable)]
+
+asembler.write("\n")
+for var in globalne_varijable:
+    asembler.write(var.kod())
+for func in funkcije:
+    for var in func.locals:
+        asembler.write(var.kod())
+        
+#glob_var = upis_golbalnih(glob_var, asembler)
+#glob_f = upis_funkcija(glob_f, asembler)
