@@ -1,3 +1,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
+testovi/
+Leksicki/__pycache__/
+Sintaksni/__pycache__/

@@ -18,8 +18,8 @@ class Varijabla:
             self.adr = ["" for i in range(velicina)]
             for i in range(velicina):
                 for krug in djelokrug:
-                    self.adr[i] += krug.upper() + "_"            
-                self.adr[i] += self.naziv.upper() + "_"+str(i)
+                    self.adr[i] += krug.upper()        
+                self.adr[i] += self.naziv.upper() +str(i)
 
         else:
             if isinstance(self.vrijednost, str):
@@ -30,7 +30,7 @@ class Varijabla:
             
             self.adr = ""
             for krug in djelokrug:
-                self.adr += krug.upper() + "_"
+                self.adr += krug.upper()
             self.adr += naziv.upper()
 
     def __repr__(self):

@@ -797,7 +797,7 @@ def redukcija_djece2(cvor):
             return cvor        
         elif len(new_djeca) == 1:
             return new_djeca[0]
-        elif cvor.znak == "<lista_init_deklaratora>" or cvor.znak == "<lista_deklaracija>" or cvor.znak == "<lista_naredbi>"  or cvor.znak == "<lista_izraza_pridruzivanja>":
+        elif cvor.znak == "<lista_init_deklaratora>" or cvor.znak == "<lista_deklaracija>" or cvor.znak == "<lista_naredbi>"  or cvor.znak == "<lista_izraza_pridruzivanja>" or cvor.znak == "<izraz>":
             return new_djeca
         else:
             cvor.djeca = new_djeca
