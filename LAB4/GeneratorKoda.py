@@ -83,7 +83,7 @@ def izracunaj_izraz(cvor, djelokrug, asembler, varijable):
                 asembler.write("\t\tPOP R0\n")
 
             elif cvor.znak == "<postfiks_izraz>":
-                if cvor.djeca[1] in ["OP_INC", "OP_DEC"]:
+                if cvor.djeca[1].znak in ["OP_INC", "OP_DEC"]:
                     izracunaj_izraz(cvor.djeca[0], djelokrug, asembler, varijable)
                     asembler.write("\t\tPOP R0\n")
             
@@ -92,7 +92,7 @@ def izracunaj_izraz(cvor, djelokrug, asembler, varijable):
                     asembler.write("\t\tPOP R1\n")
                     lab = getLabel(cvor.djeca[0].vrijednost +"0", varijable)
                     asembler.write("\t\tMOVE 0, R0\n")
-                    asembler.write("\t\tADD R0, "+lab+", R0\n")
+                    asembler.write("\t\tADD R0, "+str(id_lab)+", R0\n")
                     asembler.write("P_"+str(id_lab)+"\t\tSUB R1, 1, R1\n")
                     asembler.write("\t\tJP_N D_"+str(id_lab)+"\n")
                     asembler.write("\t\tADD R0, 4, R0\n")
@@ -367,7 +367,7 @@ def getLabel(naziv, vars):
     for var in vars:
         if var.naziv == naziv:
             return var.adr
-    
+    print("NIJEN AŠO")
 
 def loadaj_var(reg, naziv, varijable, indeks=None):
     adr = getLabel(naziv, varijable)
@@ -405,7 +405,18 @@ def analiza_funkcije(cvor, djelokrug, asembler, globalne_var):
     ugnijezdene_varijable = analiza_bloka(deklaracije, naredbe, djelokrug + [naziv_f], lokalne_var + globalne_var, asembler)
     return ugnijezdene_varijable
 
-def analiza_bloka(deklaracije, naredbe, djelokrug, varijable, asembler):
+def rastav_bloka(naredba):
+    new_dekl = []
+    new_nar = []
+    for dijete in naredba.djeca:
+        if dijete.znak == "<deklaracija>":
+            new_dekl += [dijete]
+        else:
+            new_nar += [dijete]
+    return new_dekl, new_nar
+
+
+def analiza_bloka(deklaracije, naredbe, djelokrug, varijable, asembler, petlja_pod = None):
     lokalne_var = []
     ugnijezdene_var = []
     for deklaracija in deklaracije:
@@ -421,17 +432,74 @@ def analiza_bloka(deklaracije, naredbe, djelokrug, varijable, asembler):
                 asembler.write("\t\tRET\n")
         elif naredba.znak in izrazi:
             izracunaj_izraz(naredba, djelokrug, asembler, lokalne_var + varijable)
+            asembler.write("\t\tADD R7, 4, R7\n")
         elif naredba.znak == "<slozena_naredba>":
-            new_dekl = []
-            new_nar = []
-            for dijete in naredba.djeca:
-                if dijete.znak == "<deklaracija>":
-                    new_dekl += [dijete]
-                else:
-                    new_nar += [dijete]
-
-            ugnijezdene_var += analiza_bloka(new_dekl, new_nar, djelokrug + [str(id_lab)], lokalne_var + varijable, asembler)
+            new_dekl, new_nar = rastav_bloka(naredba)
+            ugnijezdene_var += analiza_bloka(new_dekl, new_nar, djelokrug + [str(id_lab)], lokalne_var + varijable, asembler, petlja_pod)
             id_lab += 1
+        elif naredba.znak == "<naredba_petlje>":
+            if naredba.djeca[0].znak == "KR_WHILE":
+                save_lab = id_lab
+                id_lab += 1
+                asembler.write("W"+str(save_lab))
+                izracunaj_izraz(naredba.djeca[1], djelokrug, asembler, lokalne_var + varijable)
+
+                asembler.write("\t\tPOP R0\n")
+                asembler.write("\t\tCMP R0, 0\n")
+                asembler.write("\t\tJP_EQ D_" + str(save_lab) + "\n")
+                new_dekl, new_nar = rastav_bloka(naredba.djeca[2])
+                new_petlja_pod = ("W"+str(save_lab), "D_"+str(save_lab))
+                ugnijezdene_var += analiza_bloka(new_dekl, new_nar, djelokrug + [str(save_lab)], lokalne_var + varijable, asembler, new_petlja_pod)
+
+                asembler.write("\t\tJP W"+str(save_lab)+"\n")
+                asembler.write("D_" + str(save_lab))
+            
+            elif naredba.djeca[0].znak == "KR_FOR":
+                if len(naredba.djeca[1].djeca) > 0:
+                    izracunaj_izraz(naredba.djeca[1], djelokrug, asembler, lokalne_var + varijable)
+                    asembler.write("\t\tADD R7, 4, R7\n")
+
+                save_lab = id_lab
+                id_lab += 1       
+                asembler.write("F"+str(save_lab))
+                if len(naredba.djeca[1].djeca) > 0:
+                    izracunaj_izraz(naredba.djeca[2], djelokrug, asembler, lokalne_var + varijable)
+                    asembler.write("\t\tPOP R0\n")
+                    asembler.write("\t\tCMP R0, 0\n")
+                    asembler.write("\t\tJP_EQ D_" + str(save_lab) + "\n")
+
+                new_dekl, new_nar = rastav_bloka(naredba.djeca[4])
+                new_petlja_pod = ("F"+str(save_lab), "D_"+str(save_lab))
+                ugnijezdene_var += analiza_bloka(new_dekl, new_nar, djelokrug + [str(save_lab)], lokalne_var + varijable, asembler, new_petlja_pod)
+
+                if len(naredba.djeca[3].djeca) > 0:
+                    izracunaj_izraz(naredba.djeca[3], djelokrug, asembler, lokalne_var + varijable)
+                    asembler.write("\t\tADD R7, 4, R7\n")
+                asembler.write("\t\tJP F"+str(save_lab)+"\n")
+                asembler.write("D_" + str(save_lab))
+        elif naredba.znak == "KR_BREAK":
+            asembler.write("\t\tJP "+petlja_pod[1]+"\n")
+        elif naredba.znak == "KR_CONTINUE":
+            asembler.write("\t\tJP "+petlja_pod[0]+"\n")
+        elif naredba.znak == "<naredba_grananja>":
+            save_lab = id_lab
+            id_lab += 1
+
+            izracunaj_izraz(naredba.djeca[1], djelokrug, asembler, lokalne_var + varijable)
+
+            asembler.write("\t\tPOP R0\n")
+            asembler.write("\t\tCMP R0, 0\n")
+            asembler.write("\t\tJP_EQ D_" + str(save_lab) + "\n")
+
+            new_dekl, new_nar = rastav_bloka(naredba.djeca[2])
+            ugnijezdene_var += analiza_bloka(new_dekl, new_nar, djelokrug + [str(save_lab)], lokalne_var + varijable, asembler, petlja_pod)
+
+            asembler.write("D_" + str(save_lab))
+            if len(naredba.djeca) > 3:
+                print(naredba.djeca[4])
+                new_dekl, new_nar = [], [naredba.djeca[4]]
+                ugnijezdene_var += analiza_bloka(new_dekl, new_nar, djelokrug + [str(save_lab)], lokalne_var + varijable, asembler, petlja_pod)
+
 
     return lokalne_var + ugnijezdene_var
 
@@ -442,9 +510,10 @@ globalne_varijable = []
 funkcije = []
 
 asembler.write("\t\t`ORG 0\n")
-
+asembler.write("\t\tMOVE 4000, R7\n")
 for i in glob_var:
     globalne_varijable += analiza_deklaracije(i, ["G"], globalne_varijable, asembler)
+
 
 asembler.write("\n\t\tCALL F_MAIN\n")
 asembler.write("\t\tHALT\n\n")
