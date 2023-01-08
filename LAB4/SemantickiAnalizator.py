@@ -170,7 +170,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
 
             cvor.tip = djeca[0].tip.pov
             cvor.lizraz = False
-
+            cvor.jePozivFunkcije = True
 
         elif(djeca[2].znak == "<lista_argumenata>"):
             provjeri(djeca[0], tablica_IDN, djelokrug)
@@ -178,6 +178,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
 
             cvor.tip = djeca[0].tip.pov
             cvor.lizraz = False
+            cvor.jePozivFunkcije = True
 
 
         
@@ -783,7 +784,7 @@ def redukcija_djece(cvor):
         redukcija_djece(dijete)
 
 def redukcija_djece2(cvor):
-    lista_spasenih = ["<slozena_naredba>", "<init_deklarator>", "<init_deklarator>", "<deklaracija>", "<definicija_funkcije>"]
+    lista_spasenih = ["<lista_parametara>", "<slozena_naredba>", "<init_deklarator>", "<init_deklarator>", "<deklaracija>", "<definicija_funkcije>"]
     if isinstance(cvor, UnutarnjiCvor):
         new_djeca = []
         for i in cvor.djeca:

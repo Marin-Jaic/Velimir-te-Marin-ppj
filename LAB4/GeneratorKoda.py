@@ -410,7 +410,25 @@ def loadaj_var(reg, naziv, varijable, indeks=None):
 def saveaj_var(reg, naziv, varijable):
     adr = getLabel(naziv, varijable)
     asembler.write("\t\tSTORE "+reg+", (" + adr + ")\n")
+
+
+def pred_analiza_funkcije(cvor, djelokrug):
+    naziv_og = cvor.djeca[1].vrijednost
+    naziv_f = cvor.djeca[1].vrijednost.upper()[0] + str(id_lab)
+    argumenti = cvor.djeca[2] 
+    lokalne_var = []
+
+    if argumenti.znak == "<lista_parametara>":
+        tipovi = argumenti.tipovi
+        imena = argumenti.imena
+        for i in range(len(tipovi)):
+            if SemantickiAnalizator.jeNizX(tipovi[i]):
+                lokalne_var += [Varijabla(tipovi[i], imena[i], 0, djelokrug + [naziv_f], True)]
+            else:
+                lokalne_var += [Varijabla(tipovi[i], imena[i], 0, djelokrug + [naziv_f])]
     
+    return Funkcija(naziv_og, lokalne_var, "F_" + naziv_og.upper())
+
     
 def analiza_funkcije(cvor, djelokrug, asembler, globalne_var):
     blok = cvor.djeca[3]
@@ -421,12 +439,13 @@ def analiza_funkcije(cvor, djelokrug, asembler, globalne_var):
     naredbe = []
     argumenti = cvor.djeca[2] 
     lokalne_var = []
+
     if argumenti.znak == "<lista_parametara>":
         tipovi = argumenti.tipovi
         imena = argumenti.imena
+
         for i in range(len(tipovi)):
-            if not SemantickiAnalizator.jeNizX(tipovi[i]):
-                lokalne_var += [Varijabla(tipovi[i], imena[i], 0, djelokrug + [naziv_f])]
+            lokalne_var += [Varijabla(tipovi[i], imena[i], 0, djelokrug + [naziv_f])]
     
     
     for dijete in blok.djeca:
@@ -435,10 +454,10 @@ def analiza_funkcije(cvor, djelokrug, asembler, globalne_var):
         else:
             naredbe += [dijete]
 
-    args = lokalne_var[:]
+
     asembler.write("F_" + naziv_og.upper())
     ugnijezdene_varijable = analiza_bloka(deklaracije, naredbe, djelokrug + [naziv_f], lokalne_var + globalne_var, asembler)
-    return ugnijezdene_varijable
+    return ugnijezdene_varijable + lokalne_var
 
 def rastav_bloka(naredba):
     if not isinstance(naredba, Stablo.UnutarnjiCvor):
@@ -459,7 +478,6 @@ def analiza_bloka(deklaracije, naredbe, djelokrug, varijable, asembler, petlja_p
     ugnijezdene_var = []
     for deklaracija in deklaracije:
         lokalne_var += analiza_deklaracije(deklaracija, djelokrug, lokalne_var + varijable, asembler)
-    print(lokalne_var)
     global id_lab
     global izrazi
     for naredba in naredbe:
@@ -541,7 +559,6 @@ def analiza_bloka(deklaracije, naredbe, djelokrug, varijable, asembler, petlja_p
 
             asembler.write("D_" + str(save_lab))
             if len(naredba.djeca) > 3:
-                print(naredba.djeca[4])
                 new_dekl, new_nar = [], [naredba.djeca[4]]
                 ugnijezdene_var += analiza_bloka(new_dekl, new_nar, djelokrug + [str(save_lab)], lokalne_var + varijable, asembler, petlja_pod)
 
@@ -552,6 +569,7 @@ obilazak(korijen_gen_st)
 
 
 globalne_varijable = []
+funkcije_vars = []
 funkcije = []
 
 asembler.write("\t\t`ORG 0\n")
@@ -564,15 +582,17 @@ asembler.write("\n\t\tCALL F_MAIN\n")
 asembler.write("\t\tHALT\n\n")
 
 for i in glob_f:
-    funkcije += [analiza_funkcije(i, [], asembler, globalne_varijable)]
+    funkcije += [pred_analiza_funkcije(i, [])]
 
+for i in glob_f:
+    funkcije_vars += [analiza_funkcije(i, [], asembler, globalne_varijable)]
 
 
 for var in globalne_varijable:
     asembler.write(var.kod())
 
 
-for vars in funkcije:
+for vars in funkcije_vars:
     for var in vars:
         asembler.write(var.kod())
         

@@ -8,9 +8,10 @@ class Cvor:
         self.imena = None #Marin dodavanje
         self.ntip = None
         self.brelem = None
+        self.jePozivFunkcije = False
 
     def __repr__(self):
-        return self.znak + " ( tip= " + str(self.tip) + ", tipovi= " + str(self.tipovi) + ", ime=" + str(self.ime) + ", imena=" + str(self.imena) + ", brelem=" + str(self.brelem) + " )" 
+        return self.znak + " ( tip= " + str(self.tip) + ", tipovi= " + str(self.tipovi) + ", ime=" + str(self.ime) + ", imena=" + str(self.imena) + ", brelem=" + str(self.brelem) + ", jePoziF=" + str(self.jePozivFunkcije) +  " )" 
 
 class List(Cvor):
     def __init__(self, znak, red, vrijednost):
