@@ -8,13 +8,13 @@ import Stablo
 #>python Leksicki/LA.py < testovi/e_001/test.c | python Sintaksni/SA.py | python GeneratorKoda.py
 korijen_gen_st = SemantickiAnalizator.semanticka_analiza(ulaz.ulaz())
 
-asembler = open('a.firsc', 'w')
+asembler = open('frisc.a', 'w')
 
 
 
 glob_f = []
 glob_var = []
-izrazi = ["<postfiks_izraz>", "<izraz_pridruzivanja>", "<primarni_izraz>", "<unarni_izraz>", "<log_ili_izraz>", "<log_i_izraz>", "<aditivni_izraz>", "<jednakosni_izraz>", "<bin_ili_izraz>", "<odnosni_izraz>", "<bin_i_izraz>", "<bin_xili_izraz>"]
+izrazi = ["<multiplikativni_izraz>", "<postfiks_izraz>", "<izraz_pridruzivanja>", "<primarni_izraz>", "<unarni_izraz>", "<log_ili_izraz>", "<log_i_izraz>", "<aditivni_izraz>", "<jednakosni_izraz>", "<bin_ili_izraz>", "<odnosni_izraz>", "<bin_i_izraz>", "<bin_xili_izraz>"]
 jednobrojcani_irazi = ["<postfiks_izraz>", "<unarni_izraz>"]
 id_lab = 1
 
@@ -242,8 +242,114 @@ def izracunaj_izraz(cvor, djelokrug, asembler, varijable):
                     asembler.write("\t\tMOVE R0, R1\n")
                     asembler.write("\t\tSUB R1, 1, R1\n")
                     saveaj_var("R1", cvor.djeca[0].vrijednost, varijable)
-                      
+            elif cvor.znak == "<multiplikativni_izraz>":
+                if cvor.djeca[1].znak == "OP_PUTA":
+                    asembler.write("\t\tMOVE 0, R3\n")
 
+                    asembler.write("\t\tCMP R0, 0\n")
+                    asembler.write("\t\tJP_SGE DA_"+str(id_lab)+"\n")
+                    asembler.write("\t\tMOVE 0FFFFFFFF, R2\n")
+                    asembler.write("\t\tSUB R2, R0, R0\n")
+                    asembler.write("\t\tADD R0, 1, R0\n")
+                    asembler.write("\t\tXOR R3, 1, R3\n")
+                    asembler.write("DA_"+str(id_lab))
+                    id_lab+=1
+                    asembler.write("\t\tCMP R1, 0\n")
+                    asembler.write("\t\tJP_SGE DA_"+str(id_lab)+"\n")
+                    asembler.write("\t\tMOVE 0FFFFFFFF, R2\n")
+                    asembler.write("\t\tSUB R2, R1, R1\n")
+                    asembler.write("\t\tADD R1, 1, R1\n")
+                    asembler.write("\t\tXOR R3, 1, R3\n")
+                    asembler.write("DA_"+str(id_lab))
+                    asembler.write("\t\tMOVE R0, R2\n")
+                    id_lab+=1
+                    asembler.write("P_"+str(id_lab)+"\t\tSUB R1, 1, R1\n")
+                    asembler.write("\t\tJP_Z D_"+str(id_lab)+"\n")
+                    asembler.write("\t\tADD R0, R2, R0\n")
+                    asembler.write("\t\tJP P_"+str(id_lab)+"\n")
+                    asembler.write("D_"+str(id_lab))
+                    id_lab += 1
+                    asembler.write("\t\tCMP R3, 1\n")
+                    asembler.write("\t\tJP_NE D_"+str(id_lab)+"\n")
+                    asembler.write("\t\tMOVE 0FFFFFFFF, R2\n")
+                    asembler.write("\t\tSUB R2, R0, R0\n")
+                    asembler.write("\t\tADD R0, 1, R0\n")
+                    asembler.write("D_"+str(id_lab))
+                    id_lab += 1
+                elif cvor.djeca[1].znak == "OP_DIJELI":
+                    asembler.write("\t\tMOVE R1, R3\n")
+                    asembler.write("\t\tMOVE R0, R1\n")
+                    asembler.write("\t\tMOVE R3, R0\n")
+                    asembler.write("\t\tMOVE 0, R3\n")
+
+                    asembler.write("\t\tCMP R0, 0\n")
+                    asembler.write("\t\tJP_SGE DA_"+str(id_lab)+"\n")
+                    asembler.write("\t\tMOVE 0FFFFFFFF, R2\n")
+                    asembler.write("\t\tSUB R2, R0, R0\n")
+                    asembler.write("\t\tADD R0, 1, R0\n")
+                    asembler.write("\t\tXOR R3, 1, R3\n")
+                    asembler.write("DA_"+str(id_lab))
+                    id_lab+=1
+                    asembler.write("\t\tCMP R1, 0\n")
+                    asembler.write("\t\tJP_SGE DA_"+str(id_lab)+"\n")
+                    asembler.write("\t\tMOVE 0FFFFFFFF, R2\n")
+                    asembler.write("\t\tSUB R2, R1, R1\n")
+                    asembler.write("\t\tADD R1, 1, R1\n")
+                    asembler.write("\t\tXOR R3, 1, R3\n")
+                    asembler.write("DA_"+str(id_lab))
+                    asembler.write("\t\tMOVE 0, R2\n")
+                    id_lab+=1
+                    asembler.write("P_"+str(id_lab)+"\t\tCMP R0, R1\n")
+                    asembler.write("\t\tJP_ULT D_"+str(id_lab)+"\n")
+                    asembler.write("\t\tSUB R0, R1, R0\n")
+                    asembler.write("\t\tADD R2, 1, R2\n")
+                    asembler.write("\t\tJP P_"+str(id_lab)+"\n")
+                    asembler.write("D_"+str(id_lab))
+                    id_lab += 1
+                    asembler.write("\t\tCMP R3, 1\n")
+                    asembler.write("\t\tJP_NE D_"+str(id_lab)+"\n")
+                    asembler.write("\t\tMOVE 0FFFFFFFF, R2\n")
+                    asembler.write("\t\tSUB R2, R0, R0\n")
+                    asembler.write("\t\tADD R0, 1, R0\n")
+                    asembler.write("D_"+str(id_lab)+"\t\tMOVE R2, R0\n")
+                    id_lab += 1
+                elif cvor.djeca[1].znak == "OP_MOD":
+                    asembler.write("\t\tMOVE R1, R3\n")
+                    asembler.write("\t\tMOVE R0, R1\n")
+                    asembler.write("\t\tMOVE R3, R0\n")
+                    asembler.write("\t\tMOVE 0, R3\n")
+
+                    asembler.write("\t\tCMP R0, 0\n")
+                    asembler.write("\t\tJP_SGE DA_"+str(id_lab)+"\n")
+                    asembler.write("\t\tMOVE 0FFFFFFFF, R2\n")
+                    asembler.write("\t\tSUB R2, R0, R0\n")
+                    asembler.write("\t\tADD R0, 1, R0\n")
+                    asembler.write("\t\tXOR R3, 1, R3\n")
+                    asembler.write("DA_"+str(id_lab))
+                    id_lab+=1
+                    asembler.write("\t\tCMP R1, 0\n")
+                    asembler.write("\t\tJP_SGE DA_"+str(id_lab)+"\n")
+                    asembler.write("\t\tMOVE 0FFFFFFFF, R2\n")
+                    asembler.write("\t\tSUB R2, R1, R1\n")
+                    asembler.write("\t\tADD R1, 1, R1\n")
+                    asembler.write("\t\tXOR R3, 1, R3\n")
+                    asembler.write("DA_"+str(id_lab))
+                    asembler.write("\t\tMOVE 0, R2\n")
+                    id_lab+=1
+                    asembler.write("P_"+str(id_lab)+"\t\tCMP R0, R1\n")
+                    asembler.write("\t\tJP_ULT D_"+str(id_lab)+"\n")
+                    asembler.write("\t\tSUB R0, R1, R0\n")
+                    asembler.write("\t\tADD R2, 1, R2\n")
+                    asembler.write("\t\tJP P_"+str(id_lab)+"\n")
+                    asembler.write("D_"+str(id_lab))
+                    id_lab += 1
+                    asembler.write("\t\tCMP R3, 1\n")
+                    asembler.write("\t\tJP_NE D_"+str(id_lab)+"\n")
+                    asembler.write("\t\tMOVE 0FFFFFFFF, R2\n")
+                    asembler.write("\t\tSUB R2, R0, R0\n")
+                    asembler.write("\t\tADD R0, 1, R0\n")
+                    asembler.write("D_"+str(id_lab))
+                    id_lab += 1
             asembler.write("\t\tPUSH R0\n")
 
 
