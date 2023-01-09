@@ -16,7 +16,7 @@ class Varijabla:
 
 
     def __repr__(self):
-        return self.naziv + " = " + str(self.vrijednost)
+        return self.naziv + " = " + str(self.vrijednost) + "("+str(self.jePointer)+")"
 
     def kod(self):
         return self.adr + "\t\tDW %D " + str(self.vrijednost) + "\n"

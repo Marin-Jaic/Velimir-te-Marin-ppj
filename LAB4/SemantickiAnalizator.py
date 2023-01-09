@@ -171,6 +171,7 @@ def provjeri(cvor, tablica_IDN, djelokrug):
             cvor.tip = djeca[0].tip.pov
             cvor.lizraz = False
             cvor.jePozivFunkcije = True
+            cvor.djeca.insert(2, List("KR_VOID", None, "void"))
 
         elif(djeca[2].znak == "<lista_argumenata>"):
             provjeri(djeca[0], tablica_IDN, djelokrug)
@@ -798,7 +799,7 @@ def redukcija_djece2(cvor):
             return cvor        
         elif len(new_djeca) == 1:
             return new_djeca[0]
-        elif cvor.znak == "<lista_init_deklaratora>" or cvor.znak == "<lista_deklaracija>" or cvor.znak == "<lista_naredbi>"  or cvor.znak == "<lista_izraza_pridruzivanja>" or cvor.znak == "<izraz>":
+        elif cvor.znak == "<lista_init_deklaratora>" or cvor.znak == "<lista_deklaracija>" or cvor.znak == "<lista_naredbi>"  or cvor.znak == "<lista_izraza_pridruzivanja>" or cvor.znak == "<izraz>" or cvor.znak == "<lista_argumenata>":
             return new_djeca
         else:
             cvor.djeca = new_djeca
@@ -814,7 +815,7 @@ def semanticka_analiza(korijen_stabla):
     provjeri(korijen_stabla, golablni_djelokrug_IDN, djelokrug)
     
     redukcija_djece2(korijen_stabla)
-    ispis_stabla(korijen_stabla)
+    #ispis_stabla(korijen_stabla)
 
     return korijen_stabla
 
