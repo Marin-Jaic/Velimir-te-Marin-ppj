@@ -14,7 +14,7 @@ asembler = open('a.frisc', 'w')
 
 glob_f = []
 glob_var = []
-izrazi = ["<multiplikativni_izraz>", "<postfiks_izraz>", "<izraz_pridruzivanja>", "<primarni_izraz>", "<unarni_izraz>", "<log_ili_izraz>", "<log_i_izraz>", "<aditivni_izraz>", "<jednakosni_izraz>", "<bin_ili_izraz>", "<odnosni_izraz>", "<bin_i_izraz>", "<bin_xili_izraz>"]
+izrazi = ["<cast_izraz>", "<multiplikativni_izraz>", "<postfiks_izraz>", "<izraz_pridruzivanja>", "<primarni_izraz>", "<unarni_izraz>", "<log_ili_izraz>", "<log_i_izraz>", "<aditivni_izraz>", "<jednakosni_izraz>", "<bin_ili_izraz>", "<odnosni_izraz>", "<bin_i_izraz>", "<bin_xili_izraz>"]
 jednobrojcani_irazi = ["<postfiks_izraz>", "<unarni_izraz>"]
 id_lab = 1
 
@@ -97,7 +97,9 @@ def izracunaj_izraz(cvor, djelokrug, asembler, varijable, funkcije, tr_f, adr=Fa
                 else:
                     consts += izracunaj_izraz(cvor.djeca[1], djelokrug, asembler, varijable, funkcije, tr_f)
                     asembler.write("\t\tPOP R0\n")
-            
+            #if cvor.znak == "<cast_izraz>":
+
+
             elif cvor.znak == "<izraz_pridruzivanja>" and cvor.djeca[0].znak == "<postfiks_izraz>":
                 consts += izracunaj_izraz(cvor.djeca[0], djelokrug, asembler, varijable, funkcije, tr_f, True)
                 consts += izracunaj_izraz(cvor.djeca[2], djelokrug, asembler, varijable, funkcije, tr_f)
@@ -130,6 +132,7 @@ def izracunaj_izraz(cvor, djelokrug, asembler, varijable, funkcije, tr_f, adr=Fa
                         for i in range(len(f.args)):
                             if f.args[i].jePointer:
                                 var = getVar(predani[i].vrijednost, varijable)
+                                
                                 if var != None and var.jePointer:
                                     lab = getLabel(predani[i].vrijednost, varijable)
                                     asembler.write("\t\tLOAD R0, ("+lab+")\n")
@@ -137,13 +140,20 @@ def izracunaj_izraz(cvor, djelokrug, asembler, varijable, funkcije, tr_f, adr=Fa
                                     lab = getLabel(predani[i].vrijednost + "0", varijable)
                                     asembler.write("\t\tMOVE 0, R0\n")
                                     asembler.write("\t\tADD R0, "+lab+", R0\n")
-                                asembler.write("\t\tSTORE R0, ("+ f.args[i].adr +")\n")
-
+                                asembler.write("\t\tSTORE R0, (R5)\n")
+                                asembler.write("\t\tSUB R5, 4, R5\n")
                             else:
                                 izracunaj_izraz(predani[i], djelokrug, asembler, varijable, funkcije, tr_f)
                                 asembler.write("\t\tPOP R0\n")
-                                asembler.write("\t\tSTORE R0, ("+f.args[i].adr+")\n")
+                                asembler.write("\t\tSTORE R0, (R5)\n")
+                                asembler.write("\t\tSUB R5, 4, R5\n")
+                                
+                                
+                        for i in range(len(f.args) - 1, -1, -1):
+                            asembler.write("\t\tADD R5, 4, R5\n")
+                            asembler.write("\t\tLOAD R0, (R5)\n")
 
+                            asembler.write("\t\tSTORE R0, ("+f.args[i].adr+")\n")
                     asembler.write("\t\tCALL "+f.adr+"\n")
 
                     if tr_f.args != []:

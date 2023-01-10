@@ -801,6 +801,8 @@ def redukcija_djece2(cvor):
             return new_djeca[0]
         elif cvor.znak == "<lista_init_deklaratora>" or cvor.znak == "<lista_deklaracija>" or cvor.znak == "<lista_naredbi>"  or cvor.znak == "<lista_izraza_pridruzivanja>" or cvor.znak == "<izraz>" or cvor.znak == "<lista_argumenata>":
             return new_djeca
+        elif cvor.znak == "<cast_izraz>":
+            return new_djeca[1]
         else:
             cvor.djeca = new_djeca
             return cvor
