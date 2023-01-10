@@ -79,7 +79,6 @@ def analiza_deklaracije(cvor, djelokrug, varijable, asembler, funkcije, tr_f):
 
 
 def izracunaj_izraz(cvor, djelokrug, asembler, varijable, funkcije, tr_f, adr=False):
-
     global id_lab
     global izrazi
     global jednobrojcani_irazi
@@ -118,7 +117,7 @@ def izracunaj_izraz(cvor, djelokrug, asembler, varijable, funkcije, tr_f, adr=Fa
         
                 elif cvor.jePozivFunkcije:
                     f = getFunc(cvor.djeca[0].vrijednost, funkcije)
-                    if tr_f.args!= []:
+                    if tr_f.args != []:
                         for arg in tr_f.args:
                             asembler.write("\t\tLOAD R0, ("+arg.adr+")\n")
                             asembler.write("\t\tSTORE R0, (R5)\n")
@@ -130,9 +129,14 @@ def izracunaj_izraz(cvor, djelokrug, asembler, varijable, funkcije, tr_f, adr=Fa
 
                         for i in range(len(f.args)):
                             if f.args[i].jePointer:
-                                lab = getLabel(predani[i].vrijednost + "0", varijable)
-                                asembler.write("\t\tMOVE 0, R0\n")
-                                asembler.write("\t\tADD R0, "+lab+", R0\n")
+                                var = getVar(predani[i].vrijednost, varijable)
+                                if var != None and var.jePointer:
+                                    lab = getLabel(predani[i].vrijednost, varijable)
+                                    asembler.write("\t\tLOAD R0, ("+lab+")\n")
+                                else:
+                                    lab = getLabel(predani[i].vrijednost + "0", varijable)
+                                    asembler.write("\t\tMOVE 0, R0\n")
+                                    asembler.write("\t\tADD R0, "+lab+", R0\n")
                                 asembler.write("\t\tSTORE R0, ("+ f.args[i].adr +")\n")
 
                             else:
@@ -153,22 +157,36 @@ def izracunaj_izraz(cvor, djelokrug, asembler, varijable, funkcije, tr_f, adr=Fa
                     return consts
 
                 else:
-                    if adr:
-                        consts += izracunaj_izraz(cvor.djeca[1], djelokrug, asembler, varijable, funkcije, tr_f)
-                        asembler.write("\t\tPOP R1\n")
+                    var = getVar(cvor.djeca[0].vrijednost, varijable)
 
-                        lab = getLabel(cvor.djeca[0].vrijednost +"0", varijable)
-                        asembler.write("\t\tMOVE 0, R0\n")
-                        asembler.write("\t\tADD R0, "+str(lab)+", R0\n")
-                        asembler.write("P_"+str(id_lab)+"\t\tSUB R1, 1, R1\n")
-                        asembler.write("\t\tJP_N D_"+str(id_lab)+"\n")
-                        asembler.write("\t\tADD R0, 4, R0\n")
-                        asembler.write("\t\tJP P_"+str(id_lab)+"\n")
-                        asembler.write("D_"+str(id_lab)+"\n")
-                        id_lab += 1
-                       
+                    if adr:
+                        if var == None or not var.jePointer:
+
+                            consts += izracunaj_izraz(cvor.djeca[1], djelokrug, asembler, varijable, funkcije, tr_f)
+                            asembler.write("\t\tPOP R1\n")
+
+                            lab = getLabel(cvor.djeca[0].vrijednost +"0", varijable)
+                            asembler.write("\t\tMOVE 0, R0\n")
+                            asembler.write("\t\tADD R0, "+str(lab)+", R0\n")
+                            asembler.write("P_"+str(id_lab)+"\t\tSUB R1, 1, R1\n")
+                            asembler.write("\t\tJP_N D_"+str(id_lab)+"\n")
+                            asembler.write("\t\tADD R0, 4, R0\n")
+                            asembler.write("\t\tJP P_"+str(id_lab)+"\n")
+                            asembler.write("D_"+str(id_lab)+"\n")
+                            id_lab += 1
+                        else:
+                            consts += izracunaj_izraz(cvor.djeca[1], djelokrug, asembler, varijable, funkcije, tr_f)
+                            asembler.write("\t\tPOP R1\n")
+                            lab = getLabel(cvor.djeca[0].vrijednost, varijable)
+                            asembler.write("\t\tLOAD R0, ("+str(lab)+")\n")
+                            asembler.write("P_"+str(id_lab)+"\t\tSUB R1, 1, R1\n")
+                            asembler.write("\t\tJP_N D_"+str(id_lab)+"\n")
+                            asembler.write("\t\tADD R0, 4, R0\n")
+                            asembler.write("\t\tJP P_"+str(id_lab)+"\n")
+                            asembler.write("D_"+str(id_lab)+"\n")
+
+                            id_lab += 1
                     else:
-                        var = getVar(cvor.djeca[0].vrijednost, varijable)
 
                         if var == None or not var.jePointer:
                             consts += izracunaj_izraz(cvor.djeca[1], djelokrug, asembler, varijable, funkcije, tr_f)
@@ -539,7 +557,7 @@ def getLabel(naziv, vars):
     for var in vars:
         if var.naziv == naziv:
             return var.adr
-    getFunc(naziv, vars)
+    #getFunc(naziv, vars)
 
 def getVar(naziv, vars):
     for var in vars:
@@ -570,27 +588,21 @@ def pred_analiza_funkcije(cvor, djelokrug):
                 lokalne_var += [Varijabla(tipovi[i], imena[i], 0, djelokrug + [naziv_f], True)]
             else:
                 lokalne_var += [Varijabla(tipovi[i], imena[i], 0, djelokrug + [naziv_f])]
+
+    blok = cvor.djeca[3]
+    if blok.djeca[-1].znak not in ["KR_RETURN", "<naredba_skoka>"]:
+        blok.djeca += [Stablo.List("KR_RETURN", None, "return")]
     return Funkcija(naziv_og, lokalne_var, "F_" + naziv_og.upper())
 
     
-def analiza_funkcije(cvor, djelokrug, asembler, globalne_var, funkcije):
+def analiza_funkcije(cvor, djelokrug, asembler, lokalne_var, globalne_var, funkcije):
     blok = cvor.djeca[3]
     global id_lab
-    naziv_og = cvor.djeca[1].vrijednost.upper()
+    naziv_og = cvor.djeca[1].vrijednost
     naziv_f = cvor.djeca[1].vrijednost.upper()[0] + str(id_lab)
     deklaracije = []
     naredbe = []
     argumenti = cvor.djeca[2] 
-    lokalne_var = []
-
-    if argumenti.znak == "<lista_parametara>":
-        tipovi = argumenti.tipovi
-        imena = argumenti.imena
-        for i in range(len(tipovi)):
-            if SemantickiAnalizator.jeNizX(tipovi[i]):
-                lokalne_var += [Varijabla(tipovi[i], imena[i], 0, djelokrug + [naziv_f], True)]
-            else:
-                lokalne_var += [Varijabla(tipovi[i], imena[i], 0, djelokrug + [naziv_f])]
     
     for dijete in blok.djeca:
         if dijete.znak == "<deklaracija>":
@@ -601,6 +613,7 @@ def analiza_funkcije(cvor, djelokrug, asembler, globalne_var, funkcije):
     tr_f =  Funkcija(naziv_og, lokalne_var, "F_" + naziv_og.upper())
 
     asembler.write("F_" + naziv_og.upper())
+
     ugnijezdene_varijable = analiza_bloka(deklaracije, naredbe, djelokrug + [naziv_f], lokalne_var + globalne_var, asembler, funkcije, tr_f)
     return ugnijezdene_varijable + lokalne_var
 
@@ -668,7 +681,7 @@ def analiza_bloka(deklaracije, naredbe, djelokrug, varijable, asembler, funkcije
                 save_lab = id_lab
                 id_lab += 1       
                 asembler.write("F"+str(save_lab))
-                if len(naredba.djeca[1].djeca) > 0:
+                if len(naredba.djeca[2].djeca) > 0:
                     ugnijezdene_var += izracunaj_izraz(naredba.djeca[2], djelokrug, asembler, lokalne_var + varijable, funkcije, tr_f)
                     asembler.write("\t\tPOP R0\n")
                     asembler.write("\t\tCMP R0, 0\n")
@@ -736,20 +749,25 @@ for i in glob_var:
 asembler.write("\n\t\tCALL F_MAIN\n")
 asembler.write("\t\tHALT\n\n")
 
-for i in glob_f:
-    f = pred_analiza_funkcije(i, [])
+for i in range(len(glob_f)):
+    f = pred_analiza_funkcije(glob_f[i], [])
     funkcije += [f]
     #globalne_varijable += f.args
-for i in glob_f:
-    funkcije_vars += [analiza_funkcije(i, [], asembler, globalne_varijable, funkcije)]
+for i in range(len(glob_f)):
+    funkcije_vars += [analiza_funkcije(glob_f[i], [], asembler, funkcije[i].args, globalne_varijable, funkcije)]
 
 for var in globalne_varijable:
     asembler.write(var.kod())
+
+#for f in funkcije:
+#    for a in f.args:
+#        asembler.write(a.kod())
 
 
 for vars in funkcije_vars:
     for var in vars:
         asembler.write(var.kod())
-        
+    
+asembler.close()
 #glob_var = upis_golbalnih(glob_var, asembler)
 #glob_f = upis_funkcija(glob_f, asembler)
